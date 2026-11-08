@@ -37,14 +37,18 @@
   const pickedPool = () => [...$('mapPool').querySelectorAll('input:checked')].map(i => i.value);
   $('mapPool').onchange = () => ls.set('vs_pool', JSON.stringify(pickedPool()));
 
-  let pendingCreate = null;
+  let pendingCreate = null, hostMode = false;
+  const ownTok = r => ls.get('vs_own_' + r) || ss.get('vs_own_' + r);
+  function createRoom(pool, teamA, teamB) {
+    const r = hex(3), toks = { A: hex(8), B: hex(8) };
+    ls.set('vs_own_' + r, JSON.stringify(toks));
+    pendingCreate = { toks, pool, teamA, teamB };
+    if (hostMode) { myCap = null; join(r); } else location.hash = 'room=' + r;
+  }
   $('createBtn').onclick = () => {
     const pool = pickedPool();
     if (pool.length < 2) { alert('맵을 2개 이상 선택'); return; }
-    const r = hex(3), toks = { A: hex(8), B: hex(8) };
-    ss.set('vs_own_' + r, JSON.stringify(toks));
-    pendingCreate = { toks, pool, teamA: $('initA').value.trim() || 'A팀', teamB: $('initB').value.trim() || 'B팀' };
-    location.hash = 'room=' + r;
+    createRoom(pool, $('initA').value.trim() || 'A팀', $('initB').value.trim() || 'B팀');
   };
 
   // 고정 관전 링크: 방장 브라우저마다 그룹 코드 하나, 새 방을 만들 때마다 그 그룹의 '최신 방'이 갱신됨
@@ -61,7 +65,7 @@
     c.on('message', (t, b) => {
       if (follow !== c) return;
       let d; try { d = JSON.parse(b.toString()); } catch { return; }
-      if (d && /^[a-z0-9]{4,12}$/.test(d.room || '') && d.room !== room) { myCap = null; join(d.room); }
+      if (d && /^[a-z0-9]{4,12}$/.test(d.room || '') && d.room !== room && !pendingCreate) { myCap = null; join(d.room); }
     });
     setTimeout(() => { if (!ok && follow === c && i + 1 < BROKERS.length) startFollow(g, i + 1); }, 7000);
   }
@@ -84,27 +88,32 @@
     const p = new URLSearchParams(location.hash.slice(1));
     const r = (p.get('room') || '').toLowerCase();
     const live = (p.get('live') || '').toLowerCase();
-    return { r: /^[a-z0-9]{4,12}$/.test(r) ? r : null, cap: p.get('cap'), live: /^[0-9a-f]{8}$/.test(live) ? live : null };
+    return { r: /^[a-z0-9]{4,12}$/.test(r) ? r : null, cap: p.get('cap'), live: /^[0-9a-f]{8}$/.test(live) ? live : null, host: p.has('host') };
   }
   function linkFor(kind) {
     const u = location.origin + location.pathname + '#room=' + room;
     if (kind === 'view') return u;
     if (kind === 'live') return location.origin + location.pathname + '#live=' + group;
-    const toks = JSON.parse(ss.get('vs_own_' + room) || 'null');
+    if (kind === 'host') return location.origin + location.pathname + '#host';
+    const toks = JSON.parse(ownTok(room) || 'null');
     return toks ? `${u}&cap=${kind}-${toks[kind]}` : u;
   }
   function enter() {
-    const { r, cap, live } = parseHash();
-    if (live) {
-      startFollow(live);
+    const { r, cap, live, host } = parseHash();
+    hostMode = host;
+    if (live || host) {
+      startFollow(host ? group : live);
       if (!room) {
         $('lobby').classList.add('hidden'); $('room').classList.remove('hidden');
-        $('rmCode').textContent = '…'; $('rpsMsg').textContent = '방 생성 대기 중'; $('myRole').textContent = '📌 최신 방 자동 관전';
+        $('rmCode').textContent = '…'; $('rpsMsg').textContent = host ? '방 불러오는 중…' : '방 생성 대기 중';
+        $('myRole').textContent = host ? '🛠️ 방장 관리' : '📌 최신 방 자동 관전';
+        $('rmLinks').classList.toggle('hidden', !host);
+        if (host) setTimeout(() => { if (hostMode && !room) { $('lobby').classList.remove('hidden'); $('room').classList.add('hidden'); } }, 5000);
       }
       return;
     }
     stopFollow();
-    if (!r) { $('lobby').classList.remove('hidden'); $('room').classList.add('hidden'); return; }
+    if (!r) { room = null; if (client) { try { client.end(true); } catch {} client = null; } $('lobby').classList.remove('hidden'); $('room').classList.add('hidden'); return; }
     if (cap && /^[AB]-[0-9a-f]{16}$/.test(cap)) {
       ss.set('vs_cap_' + r, cap);
       history.replaceState(null, '', location.pathname + '#room=' + r); // 화면 공유 때 코드 노출 방지
@@ -119,7 +128,7 @@
     room = r; base = ROOT + r + '/'; meta = null; people = {}; S = fresh(null); buffered = [];
     $('lobby').classList.add('hidden'); $('room').classList.remove('hidden');
     $('rmCode').textContent = r.toUpperCase();
-    $('rmLinks').classList.toggle('hidden', !ss.get('vs_own_' + r));
+    $('rmLinks').classList.toggle('hidden', !ownTok(r));
     $('nick').value = nick;
     resetArena();
     if (client) { try { client.end(true); } catch {} }
@@ -227,7 +236,7 @@
     if (!S.sent['claim']) { S.sent['claim'] = true; pub(`${S.round}/claim/${s}`, { cid, tok: myCap.tok, t: Date.now() }); }
   }
   const mySide = () => SIDES.find(s => S.claim[s] && S.claim[s].cid === cid);
-  const isOwner = () => !!ss.get('vs_own_' + room);
+  const isOwner = () => !!ownTok(room);
   const teamName = s => S['team' + s];
   const capName = s => { const c = S.claim[s]; return c && people[c.cid] ? people[c.cid].name : null; };
 
@@ -262,6 +271,11 @@
     if (mySide() !== s) return;
     pub(`${S.round}/name/${s}`, { cid, v: e.target.value.trim().slice(0, 20) || s + '팀' });
   });
+  $('newRoomBtn').onclick = () => {
+    const pool = (meta && meta.pool && meta.pool.length) ? meta.pool : pickedPool();
+    if (!confirm('새 방을 만들까? (팀장 링크 새로 발급)')) return;
+    createRoom(pool, S.teamA, S.teamB);
+  };
   $('room').addEventListener('click', async e => {
     const k = e.target.dataset && e.target.dataset.copy;
     if (!k) return;
@@ -445,6 +459,7 @@
     if (myCap && myCap.bad) role = '⚠️ 팀장 코드 불일치 · 관전 모드';
     else if (me) role = `${me}팀장`;
     else if (myCap) role = '팀장 입장 중…';
+    else if (hostMode) role = '🛠️ 방장 관리';
     else role = followGroup ? '📌 최신 방 자동 관전 중' : '👀 관전 중';
     $('myRole').textContent = role;
     renderPeople();
