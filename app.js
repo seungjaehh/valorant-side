@@ -40,7 +40,7 @@
   let pendingCreate = null;
   $('createBtn').onclick = () => {
     const pool = pickedPool();
-    if (pool.length < 2) { alert('맵 2개 이상 골라'); return; }
+    if (pool.length < 2) { alert('맵을 2개 이상 선택'); return; }
     const r = hex(3), toks = { A: hex(8), B: hex(8) };
     ss.set('vs_own_' + r, JSON.stringify(toks));
     pendingCreate = { toks, pool, teamA: $('initA').value.trim() || 'A팀', teamB: $('initB').value.trim() || 'B팀' };
@@ -94,7 +94,7 @@
     if (client) { try { client.end(true); } catch {} }
     connect(0);
     render();
-    setTimeout(() => { if (room === r && !meta && !pendingCreate) $('rpsMsg').textContent = '방 없음 · 링크 확인'; }, 7000);
+    setTimeout(() => { if (room === r && !meta && !pendingCreate) $('rpsMsg').textContent = '방을 찾을 수 없음 · 링크 확인 필요'; }, 7000);
   }
 
   // ---------- 연결 ----------
@@ -259,7 +259,7 @@
       await showDuel(rA.c, rB.c, diff, live);
       if (S.round !== round) return;
       if (diff === 0) {
-        $('rpsMsg').innerHTML = '🤝 비김 · 다시';
+        $('rpsMsg').innerHTML = '🤝 무승부 · 재경기';
         // A팀장 브라우저가 새 판을 염 (한 명만 열어야 중복이 안 생김)
         if (me === 'A' && !S.tieQueued) {
           S.tieQueued = true;
@@ -360,7 +360,7 @@
       nameEl.readOnly = me !== s;
       $('who' + s).textContent = c ? `팀장 · ${capName(s) || '입장'}${me === s ? ' (나)' : ''}` : '팀장 대기';
       let st = '';
-      if (S.res) st = S.res.winner === s ? '<span style="color:#ffd166">🏆 승 · 진영 선택</span>' : '<span class="atkc">패 · 맵 돌리기</span>';
+      if (S.res) st = S.res.winner === s ? '<span style="color:#ffd166">🏆 승리 · 진영 선택</span>' : '<span class="atkc">패배 · 맵 돌리기</span>';
       else if (S.commit[s]) st = '<span class="defc">✔ 준비</span>';
       else if (c) st = '고르는 중';
       $('st' + s).innerHTML = st;
@@ -374,8 +374,8 @@
       document.querySelectorAll('.rps-btn').forEach(b => (b.disabled = !showPick));
       let msg;
       if (!meta) msg = '불러오는 중…';
-      else if (!both) msg = '팀장 대기 중';
-      else if (me && !S.commit[me]) msg = '하나 골라';
+      else if (!both) msg = '팀장 입장 대기 중';
+      else if (me && !S.commit[me]) msg = '가위 · 바위 · 보 선택';
       else if (me) msg = '준비 완료 · 상대 대기';
       else msg = `준비 ${SIDES.filter(s => S.commit[s]).length} / 2`;
       $('rpsMsg').textContent = msg;
@@ -387,12 +387,12 @@
     $('arenaLabel').textContent = !R ? 'ROCK PAPER SCISSORS' : (S.rolled && S.side ? 'MATCH READY' : 'MAP & SIDE');
     if (R) {
       const W = teamName(R.winner), L = teamName(R.loser);
-      if (!S.rolling && !S.rolled) $('postMsg').innerHTML = me === R.loser ? '맵 돌려' : `${esc(L)} 맵 돌리기 대기`;
+      if (!S.rolling && !S.rolled) $('postMsg').innerHTML = me === R.loser ? '맵 돌리기 차례' : `${esc(L)} 맵 돌리기 대기 중`;
       if (S.rolled) $('postMsg').innerHTML = `🗺️ <b style="color:#ffd166">${esc(S.mapName)}</b>`;
       $('rollBox').classList.toggle('hidden', !(me === R.loser && !S.roll));
       $('sideBox').classList.toggle('hidden', !(me === R.winner && !S.side));
       if (!$('rpsMsg').dataset.done) {
-        $('rpsMsg').innerHTML = `🏆 <b style="color:#ffd166">${esc(W)}</b> 승 · ${esc(L)} 맵 돌리기`;
+        $('rpsMsg').innerHTML = `🏆 <b style="color:#ffd166">${esc(W)}</b> 승리 · ${esc(L)} 맵 돌리기`;
       }
       // 최종
       const fin = $('final');
@@ -410,10 +410,10 @@
     $('againBtn').classList.toggle('hidden', !((me || isOwner()) && S.round && (S.res || S.commit.A || S.commit.B)));
 
     let role;
-    if (myCap && myCap.bad) role = '⚠️ 팀장 코드 안 맞음 · 관전';
+    if (myCap && myCap.bad) role = '⚠️ 팀장 코드 불일치 · 관전 모드';
     else if (me) role = `${me}팀장`;
     else if (myCap) role = '팀장 입장 중…';
-    else role = '👀 관전';
+    else role = '👀 관전 중';
     $('myRole').textContent = role;
     renderPeople();
   }
