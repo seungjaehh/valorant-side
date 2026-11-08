@@ -47,6 +47,26 @@
     location.hash = 'room=' + r;
   };
 
+  // 고정 관전 링크: 방장 브라우저마다 그룹 코드 하나, 새 방을 만들 때마다 그 그룹의 '최신 방'이 갱신됨
+  let group = ls.get('vs_group'); if (!/^[0-9a-f]{8}$/.test(group || '')) { group = hex(4); ls.set('vs_group', group); }
+  let follow = null, followGroup = null;
+  function startFollow(g, i = 0) {
+    if (followGroup === g && follow && i === 0) return;
+    stopFollow(); followGroup = g;
+    if (!window.mqtt) return;
+    const c = window.mqtt.connect(BROKERS[i % BROKERS.length], { clientId: 'vsf_' + cid + '_' + hex(2), clean: true, connectTimeout: 6000, reconnectPeriod: 3000 });
+    follow = c; let ok = false;
+    c.on('connect', () => { ok = true; c.subscribe(ROOT + 'live/' + g, { qos: 1 }); });
+    c.on('error', () => {});
+    c.on('message', (t, b) => {
+      if (follow !== c) return;
+      let d; try { d = JSON.parse(b.toString()); } catch { return; }
+      if (d && /^[a-z0-9]{4,12}$/.test(d.room || '') && d.room !== room) { myCap = null; join(d.room); }
+    });
+    setTimeout(() => { if (!ok && follow === c && i + 1 < BROKERS.length) startFollow(g, i + 1); }, 7000);
+  }
+  function stopFollow() { if (follow) { try { follow.end(true); } catch {} } follow = null; followGroup = null; }
+
   // ---------- 방 상태 ----------
   let client = null, room = null, base = '';
   let meta = null;   // { hA, hB, pool }
@@ -63,16 +83,27 @@
   function parseHash() {
     const p = new URLSearchParams(location.hash.slice(1));
     const r = (p.get('room') || '').toLowerCase();
-    return { r: /^[a-z0-9]{4,12}$/.test(r) ? r : null, cap: p.get('cap') };
+    const live = (p.get('live') || '').toLowerCase();
+    return { r: /^[a-z0-9]{4,12}$/.test(r) ? r : null, cap: p.get('cap'), live: /^[0-9a-f]{8}$/.test(live) ? live : null };
   }
   function linkFor(kind) {
     const u = location.origin + location.pathname + '#room=' + room;
     if (kind === 'view') return u;
+    if (kind === 'live') return location.origin + location.pathname + '#live=' + group;
     const toks = JSON.parse(ss.get('vs_own_' + room) || 'null');
     return toks ? `${u}&cap=${kind}-${toks[kind]}` : u;
   }
   function enter() {
-    const { r, cap } = parseHash();
+    const { r, cap, live } = parseHash();
+    if (live) {
+      startFollow(live);
+      if (!room) {
+        $('lobby').classList.add('hidden'); $('room').classList.remove('hidden');
+        $('rmCode').textContent = '…'; $('rpsMsg').textContent = '방 생성 대기 중'; $('myRole').textContent = '📌 최신 방 자동 관전';
+      }
+      return;
+    }
+    stopFollow();
     if (!r) { $('lobby').classList.remove('hidden'); $('room').classList.add('hidden'); return; }
     if (cap && /^[AB]-[0-9a-f]{16}$/.test(cap)) {
       ss.set('vs_cap_' + r, cap);
@@ -115,6 +146,7 @@
         const p = pendingCreate; pendingCreate = null;
         pub('meta', { hA: await sha(p.toks.A), hB: await sha(p.toks.B), pool: p.pool });
         pub('round', { id: hex(4), n: 1, teamA: p.teamA, teamB: p.teamB });
+        c.publish(ROOT + 'live/' + group, JSON.stringify({ room, t: Date.now() }), { qos: 1, retain: true });
       }
     });
     c.on('reconnect', () => setConn('재연결…', true));
@@ -413,7 +445,7 @@
     if (myCap && myCap.bad) role = '⚠️ 팀장 코드 불일치 · 관전 모드';
     else if (me) role = `${me}팀장`;
     else if (myCap) role = '팀장 입장 중…';
-    else role = '👀 관전 중';
+    else role = followGroup ? '📌 최신 방 자동 관전 중' : '👀 관전 중';
     $('myRole').textContent = role;
     renderPeople();
   }
