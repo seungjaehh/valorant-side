@@ -7,7 +7,9 @@
   'use strict';
   const BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
   const ROOT = 'valside/v3/';
-  const MAPS = ['어센트', '바인드', '헤이븐', '스플릿', '아이스박스', '브리즈', '프랙처', '펄', '로터스', '선셋', '어비스', '코로드'];
+  const MAPS = ['어센트', '바인드', '헤이븐', '스플릿', '아이스박스', '브리즈', '프랙처', '펄', '로터스', '선셋', '어비스', '코로드', '서밋'];
+  const MAP_IMG = { '어센트': 'ascent', '바인드': 'bind', '헤이븐': 'haven', '스플릿': 'split', '아이스박스': 'icebox', '브리즈': 'breeze', '프랙처': 'fracture', '펄': 'pearl', '로터스': 'lotus', '선셋': 'sunset', '어비스': 'abyss', '코로드': 'corrode', '서밋': 'summit' };
+  const mapBg = m => MAP_IMG[m] ? `url(maps/${MAP_IMG[m]}.jpg) center/cover no-repeat, ${mapColor(m)}` : mapColor(m);
   const RPS = [{ em: '✌️', name: '가위' }, { em: '✊', name: '바위' }, { em: '✋', name: '보' }];
   const SIDES = ['A', 'B'];
   const other = s => (s === 'A' ? 'B' : 'A');
@@ -261,7 +263,7 @@
         // A팀장 브라우저가 새 판을 염 (한 명만 열어야 중복이 안 생김)
         if (me === 'A' && !S.tieQueued) {
           S.tieQueued = true;
-          setTimeout(() => { if (S.round === round) pub('round', { id: hex(4), n: S.n, tie: true, teamA: S.teamA, teamB: S.teamB }); }, 2200);
+          setTimeout(() => { if (S.round === round) pub('round', { id: hex(4), n: S.n, tie: true, teamA: S.teamA, teamB: S.teamB }); }, 1600);
         }
         render(); return;
       }
@@ -300,14 +302,14 @@
       $('rpsMsg').textContent = '가위… 바위… 보!';
       hA.querySelector('.em').textContent = hB.querySelector('.em').textContent = '✊';
       hA.classList.add('shake'); hB.classList.add('shake');
-      await wait(1100);
+      await wait(780);
       hA.classList.remove('shake'); hB.classList.remove('shake');
     }
     hA.querySelector('.em').textContent = RPS[a].em; hB.querySelector('.em').textContent = RPS[b].em;
     hA.classList.add('pop'); hB.classList.add('pop');
     if (diff === 1) { hA.classList.add('win'); hB.classList.add('lose'); }
     if (diff === 2) { hB.classList.add('win'); hA.classList.add('lose'); }
-    if (live) await wait(900);
+    if (live) await wait(550);
   }
 
   // 룰렛: 모두가 같은 띠를 보도록 방 코드로 순서를 고정
@@ -324,7 +326,7 @@
     stripItems = [];
     for (let i = 0; i < TARGET_POS + 6; i++) stripItems.push(pool[Math.floor(rnd() * pool.length)]);
     if (targetMap) stripItems[TARGET_POS] = targetMap;
-    $('strip').innerHTML = stripItems.map((m, i) => `<div class="mcard" data-i="${i}" style="background:${mapColor(m)}"><small>MAP</small>${esc(m)}</div>`).join('');
+    $('strip').innerHTML = stripItems.map((m, i) => `<div class="mcard" data-i="${i}" style="background:${mapBg(m)}"><small>MAP</small>${esc(m)}</div>`).join('');
     $('strip').style.transform = 'translateX(0)';
   }
   async function spinRoulette(mapIdx, live) {
@@ -341,7 +343,7 @@
     if (live) {
       $('postMsg').innerHTML = '🎰 맵을 돌리는 중…';
       const anim = strip.animate([{ transform: 'translateX(0)' }, { transform: `translateX(${x}px)` }],
-        { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 5200, easing: 'cubic-bezier(.08,.7,.12,1)', fill: 'forwards' });
+        { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 3400, easing: 'cubic-bezier(.08,.7,.12,1)', fill: 'forwards' });
       await anim.finished.catch(() => {});
     } else strip.style.transform = `translateX(${x}px)`;
     card.classList.add('hit');
@@ -397,7 +399,7 @@
       if (S.rolled || S.side) {
         fin.classList.remove('hidden');
         let html = '';
-        html += `<div class="final-map"><small>MAP</small>${S.rolled ? esc(S.mapName) : (S.rolling ? '…' : '룰렛 대기')}</div>`;
+        html += `<div class="final-map" ${S.rolled && MAP_IMG[S.mapName] ? `style="background:linear-gradient(0deg,#0b1218f0,#0b121899 60%,#0b121866),url(maps/${MAP_IMG[S.mapName]}.jpg) center/cover"` : ''}><small>MAP</small>${S.rolled ? esc(S.mapName) : (S.rolling ? '…' : '룰렛 대기')}</div>`;
         if (S.side) {
           const atkS = S.side.v === 'atk' ? R.winner : R.loser;
           html += `<div class="final-sides"><div class="final-side atk"><small>ATTACK · 공격</small>${esc(teamName(atkS))}</div><div class="final-side def"><small>DEFENSE · 수비</small>${esc(teamName(other(atkS)))}</div></div>`;

@@ -111,7 +111,7 @@
   .hand.lose{opacity:.42;filter:saturate(.35);box-shadow:none}
   .vs{font:800 24px var(--display);font-style:italic;color:#718795;text-shadow:0 2px 8px #0008}
   /* Three 350ms pumps fit the app's 1100ms anticipation window. */
-  .shake .em{animation:shake .35s linear 3}
+  .shake .em{animation:shake .25s linear 3}
   .hand.B.shake .em{--pump-tilt:8deg}
   @keyframes shake{0%,100%{transform:translateY(0) rotate(0)}18%{transform:translateY(5px) scale(1.04,.96)}48%{transform:translateY(-22px) rotate(var(--pump-tilt,-8deg)) scale(.98,1.03);animation-timing-function:cubic-bezier(.55,.05,.85,.45)}82%{transform:translateY(7px) rotate(0) scale(1.07,.93)}92%{transform:translateY(-3px) scale(.99,1.02)}}
   .pop{animation:pop .46s cubic-bezier(.2,.7,.25,1) both}
@@ -122,7 +122,7 @@
   .side-pick .btn{margin:0}
 
   /* 맵 룰렛 */
-  .roulette{position:relative;isolation:isolate;overflow:hidden;min-width:0;height:152px;margin:18px 0 14px;padding:12px 0;border:1px solid #46505a;border-top-color:#a4874c;border-bottom-color:#a4874c;background:#081018;box-shadow:inset 0 1px 0 #ffd16622,0 12px 24px #0004}
+  .roulette{position:relative;isolation:isolate;overflow:hidden;min-width:0;height:188px;margin:18px 0 14px;padding:12px 0;border:1px solid #46505a;border-top-color:#a4874c;border-bottom-color:#a4874c;background:#081018;box-shadow:inset 0 1px 0 #ffd16622,0 12px 24px #0004}
   /* Fade the moving lane; keep the frame and center marker crisp. */
   .roulette::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(90deg,#081018 0%,#081018c9 7%,#08101800 28%,#08101800 72%,#081018c9 93%,#081018 100%);box-shadow:inset 0 8px 12px #0006,inset 0 -8px 12px #0006}
   .roulette::after{content:"";position:absolute;inset:0 auto 0 50%;z-index:3;width:20px;transform:translateX(-50%);pointer-events:none;background:linear-gradient(#fff0c1,#ffd166) top center/20px 12px no-repeat,linear-gradient(#ffd166,#fff0c1) bottom center/20px 12px no-repeat,linear-gradient(#ffe4a1,#ffd166,#ffe4a1) center/2px 100% no-repeat;clip-path:polygon(0 0,100% 0,55% 12px,55% calc(100% - 12px),100% 100%,0 100%,45% calc(100% - 12px),45% 12px);filter:drop-shadow(0 0 5px #ffd166);box-shadow:0 0 18px #ffd16655}
@@ -178,7 +178,7 @@
     .rps-pick{gap:8px;margin-bottom:6px}.rps-btn{min-height:114px;padding:18px 4px 16px;font-size:13px}
     .rps-btn .em{font-size:36px}.hand{min-height:140px;padding:22px 8px 14px}.hand .em{font-size:46px}
     .duel{gap:8px}.vs{font-size:21px}
-    .roulette{height:140px}.final-map{padding:22px 12px}.final-side{padding:16px 8px;font-size:17px}
+    .roulette{height:166px}.final-map{padding:22px 12px}.final-side{padding:16px 8px;font-size:17px}
     .mcard{flex-basis:108px;font-size:16px}
     .rm-nick{width:100%}.rm-nick input{width:auto;flex:1}
     footer{flex-direction:column;align-items:flex-start;gap:4px}
@@ -287,6 +287,6 @@
   <footer><span>팬메이드 도구 · Riot Games와 관련 없음</span><span>실시간 중계: 공개 MQTT 서버</span></footer>
 </div>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
