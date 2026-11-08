@@ -196,7 +196,7 @@
   <div class="hero">
     <p class="eyebrow">THE MATCH STARTS HERE / 매치 준비</p>
     <h1>공수 <span>결정기</span></h1>
-    <p class="sub">팀장 가위바위보 → 진 팀이 맵 룰렛 → 이긴 팀이 공격/수비 선택. 모든 참여자가 실시간으로 함께 봐요.</p>
+    <p class="sub">팀장 가위바위보 → 진 팀 맵 돌리기 → 이긴 팀 공수 선택</p>
   </div>
 
   <!-- 로비 -->
@@ -206,10 +206,10 @@
       <div><label for="initA">A팀 이름</label><input type="text" id="initA" value="A팀" maxlength="20"></div>
       <div><label for="initB">B팀 이름</label><input type="text" id="initB" value="B팀" maxlength="20"></div>
     </div>
-    <p class="field-heading">MAP POOL / 룰렛에 넣을 맵</p>
+    <p class="field-heading">MAP POOL</p>
     <div class="maps" id="mapPool"></div>
     <button class="btn" id="createBtn">방 만들기</button>
-    <p class="note">방을 만들면 링크가 3개 나와요. 👀 <b>관전 링크</b>는 디스코드 채널에, 🔴 <b>A팀장</b> / 🔵 <b>B팀장 링크</b>는 각 팀장에게만 DM으로 보내세요.</p>
+    <p class="note">👀 <b>관전 링크</b> → 채널 · 🔴 <b>A팀장</b> / 🔵 <b>B팀장 링크</b> → 각 팀장 DM</p>
   </section>
 
   <!-- 방 -->
@@ -221,9 +221,9 @@
     </div>
     <div id="rmLinks" class="rm-links hidden">
       <p class="field-heading">방장 전용 · 링크 공유</p>
-      <div class="rm-link"><span>👀 관전 (채널에 공개)</span><button class="btn ghost" data-copy="view">복사</button></div>
-      <div class="rm-link"><span>🔴 A팀장 (DM으로만)</span><button class="btn ghost" data-copy="A">복사</button></div>
-      <div class="rm-link"><span>🔵 B팀장 (DM으로만)</span><button class="btn ghost" data-copy="B">복사</button></div>
+      <div class="rm-link"><span>👀 관전 (채널)</span><button class="btn ghost" data-copy="view">복사</button></div>
+      <div class="rm-link"><span>🔴 A팀장 (DM)</span><button class="btn ghost" data-copy="A">복사</button></div>
+      <div class="rm-link"><span>🔵 B팀장 (DM)</span><button class="btn ghost" data-copy="B">복사</button></div>
     </div>
 
     <div class="layout">
@@ -266,7 +266,7 @@
             <div class="roulette" id="roulette"><div class="strip" id="strip"></div></div>
             <div id="rollBox" class="hidden" style="max-width:420px;margin:0 auto"><button class="btn" id="rollBtn" style="margin-top:8px">🎰 맵 돌리기</button></div>
             <div id="sideBox" class="hidden">
-              <p class="phase-title" style="margin-top:14px">이긴 팀 · 시작 진영 선택</p>
+              <p class="phase-title" style="margin-top:14px">이긴 팀 · 진영 선택</p>
               <div class="side-pick"><button class="btn" id="pickAtk">⚔️ 공격</button><button class="btn def" id="pickDef">🛡️ 수비</button></div>
             </div>
             <div class="final hidden" id="final"></div>
@@ -284,9 +284,9 @@
     </div>
   </section>
 
-  <footer><span>팬메이드 도구 · Riot Games와 관련 없음</span><span>실시간 중계: 공개 MQTT 서버</span></footer>
+  <footer><span>팬메이드 · Riot Games 무관</span><span>실시간: 공개 MQTT</span></footer>
 </div>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

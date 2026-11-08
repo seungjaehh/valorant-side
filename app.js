@@ -40,7 +40,7 @@
   let pendingCreate = null;
   $('createBtn').onclick = () => {
     const pool = pickedPool();
-    if (pool.length < 2) { alert('맵을 2개 이상 골라주세요.'); return; }
+    if (pool.length < 2) { alert('맵 2개 이상 골라'); return; }
     const r = hex(3), toks = { A: hex(8), B: hex(8) };
     ss.set('vs_own_' + r, JSON.stringify(toks));
     pendingCreate = { toks, pool, teamA: $('initA').value.trim() || 'A팀', teamB: $('initB').value.trim() || 'B팀' };
@@ -94,12 +94,12 @@
     if (client) { try { client.end(true); } catch {} }
     connect(0);
     render();
-    setTimeout(() => { if (room === r && !meta && !pendingCreate) $('rpsMsg').textContent = '방을 찾을 수 없어요. 링크를 다시 확인하세요.'; }, 7000);
+    setTimeout(() => { if (room === r && !meta && !pendingCreate) $('rpsMsg').textContent = '방 없음 · 링크 확인'; }, 7000);
   }
 
   // ---------- 연결 ----------
   function connect(i) {
-    if (!window.mqtt) { setConn('실시간 라이브러리를 불러오지 못했어요', true); return; }
+    if (!window.mqtt) { setConn('연결 실패', true); return; }
     const presTopic = base + 'p/' + cid;
     const c = window.mqtt.connect(BROKERS[i % BROKERS.length], {
       clientId: 'vs_' + cid + '_' + hex(2), clean: true, connectTimeout: 6000, reconnectPeriod: 3000, keepalive: 20,
@@ -108,7 +108,7 @@
     client = c;
     let ok = false;
     c.on('connect', async () => {
-      ok = true; setConn('● 연결됨', false);
+      ok = true; setConn('● 연결', false);
       c.subscribe(base + '#', { qos: 1 });
       announce();
       if (pendingCreate) {
@@ -117,7 +117,7 @@
         pub('round', { id: hex(4), n: 1, teamA: p.teamA, teamB: p.teamB });
       }
     });
-    c.on('reconnect', () => setConn('재연결 중…', true));
+    c.on('reconnect', () => setConn('재연결…', true));
     c.on('offline', () => setConn('연결 끊김', true));
     c.on('error', () => {});
     c.on('message', (t, b) => { if (client === c) queue(t, b); });
@@ -234,8 +234,8 @@
     const k = e.target.dataset && e.target.dataset.copy;
     if (!k) return;
     const url = linkFor(k);
-    try { await navigator.clipboard.writeText(url); e.target.textContent = '✅ 복사됨'; }
-    catch { prompt('이 링크를 복사하세요', url); }
+    try { await navigator.clipboard.writeText(url); e.target.textContent = '✅ 복사'; }
+    catch { prompt('링크 복사', url); }
     setTimeout(() => (e.target.textContent = '복사'), 1500);
   });
 
@@ -253,13 +253,13 @@
       const rA = S.reveal.A, rB = S.reveal.B;
       const ok = (await sha(rA.c + '|' + rA.salt)) === S.commit.A.h && (await sha(rB.c + '|' + rB.salt)) === S.commit.B.h
         && [0, 1, 2].includes(rA.c) && [0, 1, 2].includes(rB.c);
-      if (!ok) { $('rpsMsg').innerHTML = '<span class="atkc">⚠️ 검증 실패 — 새 게임을 눌러주세요</span>'; render(); return; }
+      if (!ok) { $('rpsMsg').innerHTML = '<span class="atkc">⚠️ 검증 실패 · 새 게임</span>'; render(); return; }
       const diff = (rA.c - rB.c + 3) % 3; // 1: A 승, 2: B 승, 0: 비김
       const live = Date.now() - Math.max(rA.t || 0, rB.t || 0) < FRESH_MS;
       await showDuel(rA.c, rB.c, diff, live);
       if (S.round !== round) return;
       if (diff === 0) {
-        $('rpsMsg').innerHTML = '🤝 비겼어요! 잠시 후 다시 해요';
+        $('rpsMsg').innerHTML = '🤝 비김 · 다시';
         // A팀장 브라우저가 새 판을 염 (한 명만 열어야 중복이 안 생김)
         if (me === 'A' && !S.tieQueued) {
           S.tieQueued = true;
@@ -341,7 +341,7 @@
     const x = -(card.offsetLeft + cw / 2 - boxW / 2 + jitter);
     const strip = $('strip');
     if (live) {
-      $('postMsg').innerHTML = '🎰 맵을 돌리는 중…';
+      $('postMsg').innerHTML = '🎰 맵 돌리는 중…';
       const anim = strip.animate([{ transform: 'translateX(0)' }, { transform: `translateX(${x}px)` }],
         { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 3400, easing: 'cubic-bezier(.08,.7,.12,1)', fill: 'forwards' });
       await anim.finished.catch(() => {});
@@ -352,17 +352,17 @@
   function render() {
     if (!room) return;
     const me = mySide();
-    $('roundLabel').textContent = S.round ? `GAME ${S.n}${S.tie ? ' · 재대결' : ''}` : '';
+    $('roundLabel').textContent = S.round ? `GAME ${S.n}${S.tie ? ' · 재경기' : ''}` : '';
     // 슬롯
     SIDES.forEach(s => {
       const c = S.claim[s], nameEl = $('name' + s);
       if (document.activeElement !== nameEl) nameEl.value = teamName(s);
       nameEl.readOnly = me !== s;
-      $('who' + s).textContent = c ? `팀장 · ${capName(s) || '입장함'}${me === s ? ' (나)' : ''}` : '팀장 입장 대기 중';
+      $('who' + s).textContent = c ? `팀장 · ${capName(s) || '입장'}${me === s ? ' (나)' : ''}` : '팀장 대기';
       let st = '';
-      if (S.res) st = S.res.winner === s ? '<span style="color:#ffd166">🏆 승리 · 진영 선택</span>' : '<span class="atkc">패배 · 맵 룰렛</span>';
-      else if (S.commit[s]) st = '<span class="defc">✔ 선택 완료 · 대기</span>';
-      else if (c) st = '고르는 중…';
+      if (S.res) st = S.res.winner === s ? '<span style="color:#ffd166">🏆 승 · 진영 선택</span>' : '<span class="atkc">패 · 맵 돌리기</span>';
+      else if (S.commit[s]) st = '<span class="defc">✔ 준비</span>';
+      else if (c) st = '고르는 중';
       $('st' + s).innerHTML = st;
     });
 
@@ -373,11 +373,11 @@
       $('rpsPick').classList.toggle('hidden', !me);
       document.querySelectorAll('.rps-btn').forEach(b => (b.disabled = !showPick));
       let msg;
-      if (!meta) msg = '방 정보를 불러오는 중…';
-      else if (!both) msg = '두 팀장이 들어오기를 기다리는 중…';
-      else if (me && !S.commit[me]) msg = '가위 · 바위 · 보 중 하나를 고르세요';
-      else if (me) msg = '선택 완료! 상대 팀장을 기다리는 중…';
-      else msg = `팀장 선택 대기 ${SIDES.filter(s => S.commit[s]).length} / 2`;
+      if (!meta) msg = '불러오는 중…';
+      else if (!both) msg = '팀장 대기 중';
+      else if (me && !S.commit[me]) msg = '하나 골라';
+      else if (me) msg = '준비 완료 · 상대 대기';
+      else msg = `준비 ${SIDES.filter(s => S.commit[s]).length} / 2`;
       $('rpsMsg').textContent = msg;
     }
 
@@ -387,33 +387,33 @@
     $('arenaLabel').textContent = !R ? 'ROCK PAPER SCISSORS' : (S.rolled && S.side ? 'MATCH READY' : 'MAP & SIDE');
     if (R) {
       const W = teamName(R.winner), L = teamName(R.loser);
-      if (!S.rolling && !S.rolled) $('postMsg').innerHTML = me === R.loser ? '맵 룰렛을 돌려주세요!' : `<b>${esc(L)}</b> 팀장이 맵 룰렛을 돌릴 차례예요`;
-      if (S.rolled) $('postMsg').innerHTML = `🗺️ 맵: <b style="color:#ffd166">${esc(S.mapName)}</b>`;
+      if (!S.rolling && !S.rolled) $('postMsg').innerHTML = me === R.loser ? '맵 돌려' : `${esc(L)} 맵 돌리기 대기`;
+      if (S.rolled) $('postMsg').innerHTML = `🗺️ <b style="color:#ffd166">${esc(S.mapName)}</b>`;
       $('rollBox').classList.toggle('hidden', !(me === R.loser && !S.roll));
       $('sideBox').classList.toggle('hidden', !(me === R.winner && !S.side));
       if (!$('rpsMsg').dataset.done) {
-        $('rpsMsg').innerHTML = `🏆 <b style="color:#ffd166">${esc(W)}</b> 승리! · 진 쪽 <b>${esc(L)}</b>이(가) 맵을 돌려요`;
+        $('rpsMsg').innerHTML = `🏆 <b style="color:#ffd166">${esc(W)}</b> 승 · ${esc(L)} 맵 돌리기`;
       }
       // 최종
       const fin = $('final');
       if (S.rolled || S.side) {
         fin.classList.remove('hidden');
         let html = '';
-        html += `<div class="final-map" ${S.rolled && MAP_IMG[S.mapName] ? `style="background:linear-gradient(0deg,#0b1218f0,#0b121899 60%,#0b121866),url(maps/${MAP_IMG[S.mapName]}.jpg) center/cover"` : ''}><small>MAP</small>${S.rolled ? esc(S.mapName) : (S.rolling ? '…' : '룰렛 대기')}</div>`;
+        html += `<div class="final-map" ${S.rolled && MAP_IMG[S.mapName] ? `style="background:linear-gradient(0deg,#0b1218f0,#0b121899 60%,#0b121866),url(maps/${MAP_IMG[S.mapName]}.jpg) center/cover"` : ''}><small>MAP</small>${S.rolled ? esc(S.mapName) : (S.rolling ? '…' : '대기')}</div>`;
         if (S.side) {
           const atkS = S.side.v === 'atk' ? R.winner : R.loser;
           html += `<div class="final-sides"><div class="final-side atk"><small>ATTACK · 공격</small>${esc(teamName(atkS))}</div><div class="final-side def"><small>DEFENSE · 수비</small>${esc(teamName(other(atkS)))}</div></div>`;
-        } else html += `<div class="final-sides"><div class="final-side"><small>SIDE</small><span style="font-size:14px;color:var(--muted)">${esc(W)} 진영 선택 중…</span></div></div>`;
+        } else html += `<div class="final-sides"><div class="final-side"><small>SIDE</small><span style="font-size:14px;color:var(--muted)">${esc(W)} 진영 선택 중</span></div></div>`;
         fin.innerHTML = html;
       }
     }
     $('againBtn').classList.toggle('hidden', !((me || isOwner()) && S.round && (S.res || S.commit.A || S.commit.B)));
 
     let role;
-    if (myCap && myCap.bad) role = '⚠️ 팀장 코드가 이 방과 맞지 않아요. 관전 모드로 볼게요.';
-    else if (me) role = `당신은 ${me}팀장이에요.`;
-    else if (myCap) role = '팀장 자리에 들어가는 중…';
-    else role = '👀 관전 중 — 팀장들이 진행하는 걸 실시간으로 볼 수 있어요.';
+    if (myCap && myCap.bad) role = '⚠️ 팀장 코드 안 맞음 · 관전';
+    else if (me) role = `${me}팀장`;
+    else if (myCap) role = '팀장 입장 중…';
+    else role = '👀 관전';
     $('myRole').textContent = role;
     renderPeople();
   }
