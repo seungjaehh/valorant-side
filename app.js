@@ -559,24 +559,35 @@
 
   // ---------- 관리자 패널 ----------
   $('admPool').innerHTML = MAPS.map(m => `<label class="chip"><input type="checkbox" value="${m}">${m}</label>`).join('');
-  const admOpts = () => ({ mode: $('admMode').value, fmt: +$('admFmt').value, timer: +$('admTimer').value, noRep: $('admNoRep').checked,
+  const admModeV = () => (document.querySelector('input[name=admMode]:checked') || {}).value || 'ban';
+  const admOpts = () => ({ mode: admModeV(), fmt: +$('admFmt').value, timer: +$('admTimer').value, noRep: $('admNoRep').checked,
     noReact: $('admNoReact').checked, noChat: $('admNoChat').checked });
   const admPoolPicked = () => [...$('admPool').querySelectorAll('input:checked')].map(i => i.value);
   function fillAdmin() {
     $('admPanel').classList.toggle('hidden', !isAdmin());
     if (!isAdmin() || !meta) return;
     if (fillAdmin.room !== room) { fillAdmin.room = room; $('admPanel').open = !S.res; } // 진행 중인 방에 다시 들어오면 접어 둠
-    $('admMode').value = meta.mode; $('admFmt').value = meta.fmt || 1; $('admTimer').value = String(meta.timer | 0);
+    $('admNoReact').checked = !!meta.noReact; $('admNoChat').checked = !!meta.noChat;
+    if ($('admSet').open) return; // 펼쳐서 고치는 중이면 입력값 유지
+    document.querySelectorAll('input[name=admMode]').forEach(i => (i.checked = i.value === meta.mode)); $('admFmt').value = meta.fmt || 1; $('admTimer').value = String(meta.timer | 0);
     $('admNoRep').checked = !!meta.noRep; $('admNoReact').checked = !!meta.noReact; $('admNoChat').checked = !!meta.noChat;
     const pool = new Set(meta.pool || MAPS);
     $('admPool').querySelectorAll('input').forEach(i => (i.checked = pool.has(i.value)));
     syncAdmHint();
   }
   const syncAdmHint = () => {
-    $('admFmtRow').classList.toggle('hidden', $('admMode').value !== 'ban');
-    $('admPoolHint').textContent = poolDesc(admPoolPicked().length, $('admMode').value, +$('admFmt').value);
+    const ban = admModeV() === 'ban', n = admPoolPicked().length;
+    $('admFmtRow').classList.toggle('hidden', !ban); $('admTimerRow').classList.toggle('hidden', !ban);
+    $('admPoolCount').textContent = `${n} / ${MAPS.length}`;
+    $('admPoolHint').textContent = poolDesc(n, admModeV(), +$('admFmt').value);
   };
-  ['admMode', 'admFmt', 'admPool'].forEach(id => ($(id).onchange = syncAdmHint));
+  $('admSet').ontoggle = () => { if (!$('admSet').open) fillAdmin(); };
+  ['admFmt', 'admPool'].forEach(id => ($(id).onchange = syncAdmHint));
+  document.querySelectorAll('input[name=admMode]').forEach(i => (i.onchange = syncAdmHint));
+  const admSetPool = f => { $('admPool').querySelectorAll('input').forEach((i, k) => (i.checked = f(i, k))); syncAdmHint(); };
+  $('admAll').onclick = () => admSetPool(() => true);
+  $('admNone').onclick = () => admSetPool(() => false);
+  $('admRand7').onclick = () => { const pick = new Set([...MAPS].sort(() => Math.random() - 0.5).slice(0, 7)); admSetPool(i => pick.has(i.value)); };
   const admMeta = async (o, pool, gen) => pub('meta', await metaFor(adm.seed, gen == null ? (meta.gen | 0) : gen, o, pool));
   // 반응/채팅 잠금은 즉시 반영 (새 게임 없이)
   ['admNoReact', 'admNoChat'].forEach(id => ($(id).onchange = () => { if (isAdmin()) admMeta({ ...meta, noReact: $('admNoReact').checked, noChat: $('admNoChat').checked }, meta.pool); }));
