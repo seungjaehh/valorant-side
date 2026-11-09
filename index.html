@@ -64,6 +64,10 @@
   .rm-nick label{margin:0;white-space:nowrap}
   .rm-nick input{height:38px;width:150px;font-size:14px}
   .rm-links{border:1px dashed var(--line);padding:12px 14px;margin-bottom:18px}
+  .rm-links summary{cursor:pointer;list-style:none;margin:0}
+  .rm-links summary::-webkit-details-marker{display:none}
+  .rm-links[open] summary{margin-bottom:12px}
+  .sum-hint{margin-left:auto;font-size:10px;letter-spacing:1px;color:#6c7d89}
   .rm-link{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:5px 0;font-size:13px}
   .rm-link .btn{width:auto;margin:0;min-height:34px;padding:6px 14px;flex:none}
   .layout{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:20px;align-items:start}
@@ -166,6 +170,88 @@
   .badge{display:inline-flex;align-items:center;justify-content:center;min-height:22px;font:700 10px var(--display);letter-spacing:.6px;padding:3px 6px;border:1px solid #344552;background:#1b2a34;color:#b4c3ce;white-space:nowrap}
   .badge.A{color:#ff9ba4;border-color:#ff465566;background:#ff465514}.badge.B{color:#8ae7d6;border-color:#43d9bd66;background:#43d9bd12}.badge.me{color:#ffe1a1;border-color:#ffd16666;background:#ffd16612}
 
+  /* 로비: 모드 / 옵션 / 맵 풀 버튼 */
+  .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+  .mode{position:relative;display:flex;flex-direction:column;gap:6px;margin:0;padding:14px 14px 14px 40px;border:1px solid var(--line);background:#0d161e;cursor:pointer;transition:border-color .15s,background .15s}
+  .mode input{position:absolute;left:14px;top:16px;margin:0;accent-color:var(--atk)}
+  .mode:has(input:checked){border-color:#ff465599;background:linear-gradient(125deg,#ff465514,#0d161e 70%)}
+  .mode-t{font-size:15px;font-weight:900;color:var(--text)}
+  .mode-t em{font:600 10px var(--display);letter-spacing:1.5px;font-style:normal;color:#ff9ba4;border:1px solid #ff465566;padding:2px 5px;margin-left:6px;vertical-align:2px}
+  .mode-d{font-size:12px;color:var(--muted);line-height:1.6;word-break:keep-all}
+  .opts{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:20px}
+  .opt{display:flex;align-items:center;gap:8px;margin:0;font-size:13px;color:#bac5ce;cursor:pointer}
+  .opt input{margin:0;accent-color:var(--def);width:16px;height:16px}
+  .opt select{height:34px;background:#0b131c;color:var(--text);border:1px solid #34434f;padding:0 8px;font:500 13px "Noto Sans KR",sans-serif}
+  .pool-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .pool-head .field-heading{margin:0}
+  .pool-count{color:var(--text);letter-spacing:1px}
+  .pool-btns{display:flex;gap:6px}
+  .btn.mini{width:auto;margin:0;min-height:32px;padding:5px 12px;font-size:12px}
+  .pool-hint{font-size:12px;color:var(--muted);margin:10px 0 0;min-height:18px}
+
+  /* 효과음 버튼 */
+  .btn.snd{width:38px;min-height:38px;height:38px;margin:0;padding:0;font-size:16px;flex:none}
+
+  /* 맵 밴 */
+  .ban-box{margin:14px 0 4px;text-align:left}
+  .ban-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;font-weight:700;margin-bottom:8px}
+  .ban-clock{font:800 22px var(--display);color:var(--text);min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
+  .ban-clock.low{color:var(--atk);animation:blink .5s steps(2) infinite}
+  @keyframes blink{50%{opacity:.4}}
+  .ban-bar{height:3px;background:#ffffff10;margin-bottom:14px;overflow:hidden}
+  .ban-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--atk),#ffd166);transition:width .25s linear}
+  .ban-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+  .bcard{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:flex-end;min-width:0;height:96px;padding:10px;border:1px solid #ffffff1c;border-bottom:3px solid #8aa9ba;color:#fff;font:900 16px "Noto Sans KR",sans-serif;text-align:left;text-shadow:0 2px 6px #000d;cursor:default;transition:transform .15s,filter .3s,border-color .15s,box-shadow .15s}
+  .bcard::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,#050c14e6,transparent 80%)}
+  .bname{position:relative;z-index:1;overflow-wrap:anywhere}
+  .ban-grid.my-turn .bcard:not(:disabled){cursor:pointer}
+  @media(hover:hover){.ban-grid.my-turn .bcard:not(:disabled):hover{transform:translateY(-3px);border-color:var(--atk);box-shadow:0 0 0 1px var(--atk),0 8px 18px #ff465533}}
+  .ban-grid.my-turn .bcard:not(:disabled){animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 1px #ff465588,0 0 16px #ff465530}}
+  .bcard:disabled{opacity:1}
+  .bstamp,.btag{position:absolute;z-index:2;pointer-events:none;display:none}
+  .bstamp{inset:0;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#0b1117b3}
+  .bstamp b{font:800 26px var(--display);letter-spacing:4px;color:var(--atk);border:2px solid var(--atk);padding:0 10px;transform:rotate(-8deg);text-shadow:none}
+  .bstamp small{font-size:11px;font-weight:700;color:#d9e1e6;margin-top:6px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px}
+  .bcard.banned{filter:grayscale(1) brightness(.75);border-bottom-color:#46535c}
+  .bcard.banned .bname{visibility:hidden}
+  .bcard.banned .bstamp{display:flex;animation:stamp .38s cubic-bezier(.2,.8,.3,1.2) both}
+  .bcard.banned.side-B .bstamp b{color:var(--def);border-color:var(--def)}
+  .bcard.banned.no-anim .bstamp{animation:none}
+  @keyframes stamp{0%{opacity:0;transform:scale(1.8)}60%{opacity:1;transform:scale(.94)}100%{transform:scale(1)}}
+  .bcard.decider{filter:none;border-color:#ffd166;border-bottom-color:#ffd166;box-shadow:0 0 0 2px #ffd166,0 0 28px #ffd16655;animation:match-in .5s both}
+  .bcard.decider .btag{display:block;top:8px;right:8px;font:700 10px var(--display);letter-spacing:2px;color:#1a1305;background:#ffd166;padding:2px 6px}
+
+  /* 룰렛: 가운데 지나가는 카드 */
+  .mcard.cur{filter:brightness(1.35)}
+
+  /* 내 차례 */
+  .arena{transition:border-color .3s,box-shadow .3s}
+  .arena.my-turn{border-color:#ffd16688;box-shadow:0 0 0 1px #ffd16633,0 0 30px #ffd1661f}
+  .mode-label{color:#c6d1d8;margin-left:auto;margin-right:12px}
+
+  /* 하단 버튼 + 반응 */
+  .arena-actions{display:flex;gap:8px;max-width:460px;margin:16px auto 0}
+  .arena-actions .btn{margin:0;flex:1}
+  .reacts{display:flex;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+  .react{width:42px;height:38px;border:1px solid var(--line);background:#0d161e;font-size:19px;cursor:pointer;transition:transform .12s,border-color .12s}
+  .react:active{transform:scale(.88)}
+  @media(hover:hover){.react:hover{border-color:var(--muted);transform:translateY(-2px)}}
+  .float-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:5}
+  .floater{position:absolute;bottom:40px;display:flex;flex-direction:column;align-items:center;font-size:32px;line-height:1;animation:floatUp 2.6s ease-out forwards}
+  .floater small{font-size:10px;font-weight:700;color:#d9e1e6;background:#0b1117cc;padding:2px 5px;margin-top:3px;white-space:nowrap}
+  @keyframes floatUp{0%{opacity:0;transform:translateY(0) scale(.5)}12%{opacity:1;transform:translateY(-14px) scale(1.15)}80%{opacity:1}100%{opacity:0;transform:translateY(-230px) scale(1)}}
+  .confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+  /* 경기 기록 */
+  .hist-head{margin-top:18px!important;padding-top:14px;border-top:1px solid var(--line)}
+  .hist{list-style:none;margin:0;padding:0;max-height:320px;overflow:auto;scrollbar-width:thin}
+  .hist li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #ffffff08}
+  .h-thumb{flex:none;width:44px;height:30px;border:1px solid #ffffff1c}
+  .h-body{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:12px}
+  .h-body b{font-size:13px;color:var(--text)}
+  .h-body>span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
   footer{display:flex;align-items:center;justify-content:space-between;gap:16px;color:#80919f;font-size:11px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
   @media(hover:hover){.btn:not(.ghost):not(.def):hover:not(:disabled){background:#ff6170}.btn.ghost:hover{border-color:var(--muted);color:#fff}}
   @media(max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}.maps{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -181,6 +267,9 @@
     .roulette{height:166px}.final-map{padding:22px 12px}.final-side{padding:16px 8px;font-size:17px}
     .mcard{flex-basis:108px;font-size:16px}
     .rm-nick{width:100%}.rm-nick input{width:auto;flex:1}
+    .modes{grid-template-columns:minmax(0,1fr)}
+    .ban-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bcard{height:78px;font-size:15px}
+    .mode-label{display:none}
     footer{flex-direction:column;align-items:flex-start;gap:4px}
   }
   @media(max-width:400px){.masthead{flex-wrap:wrap;gap:8px}.mast-meta{font-size:10px;letter-spacing:1px}.arena-topline{flex-wrap:wrap;gap:6px}.side-pick .btn{padding:14px 8px;font-size:14px}}
@@ -196,7 +285,7 @@
   <div class="hero">
     <p class="eyebrow">THE MATCH STARTS HERE / 매치 준비</p>
     <h1>공수 <span>결정기</span></h1>
-    <p class="sub">팀장 가위바위보 → 진 팀 맵 돌리기 → 이긴 팀 공수 선택</p>
+    <p class="sub">팀장 가위바위보 → 맵 밴 (또는 룰렛) → 공수 선택 · 관전자는 실시간으로 함께 보기</p>
   </div>
 
   <!-- 로비 -->
@@ -206,8 +295,23 @@
       <div><label for="initA">A팀 이름</label><input type="text" id="initA" value="A팀" maxlength="20"></div>
       <div><label for="initB">B팀 이름</label><input type="text" id="initB" value="B팀" maxlength="20"></div>
     </div>
-    <p class="field-heading">MAP POOL</p>
+    <p class="field-heading">MAP DECISION</p>
+    <div class="modes">
+      <label class="mode"><input type="radio" name="mode" value="ban" checked><span class="mode-t">🚫 맵 밴 <em>대회 방식</em></span><span class="mode-d">가위바위보 승자부터 번갈아 밴 → 남은 1개로 경기 → 마지막 밴을 안 한 팀이 공수 선택</span></label>
+      <label class="mode"><input type="radio" name="mode" value="roulette"><span class="mode-t">🎰 맵 룰렛</span><span class="mode-d">진 팀장이 룰렛 → 이긴 팀장이 공수 선택</span></label>
+    </div>
+    <div class="opts">
+      <label class="opt" id="timerRow">⏱️ 밴 제한시간
+        <select id="banTimer"><option value="0">없음</option><option value="20">20초</option><option value="30" selected>30초</option><option value="45">45초</option><option value="60">60초</option></select>
+      </label>
+      <label class="opt"><input type="checkbox" id="noRep"> 이 방에서 이미 한 맵 다음 게임에서 제외</label>
+    </div>
+    <div class="pool-head">
+      <p class="field-heading">MAP POOL <span id="poolCount" class="pool-count"></span></p>
+      <div class="pool-btns"><button type="button" class="btn ghost mini" id="poolRand7">랜덤 7</button><button type="button" class="btn ghost mini" id="poolAll">전체</button><button type="button" class="btn ghost mini" id="poolNone">해제</button></div>
+    </div>
     <div class="maps" id="mapPool"></div>
+    <p class="pool-hint" id="poolHint"></p>
     <button class="btn" id="createBtn">방 만들기</button>
     <p class="note">👀 <b>관전 링크</b> → 채널 · 🔴 <b>A팀장</b> / 🔵 <b>B팀장 링크</b> → 각 팀장 DM</p>
   </section>
@@ -217,17 +321,17 @@
     <div class="rm-head">
       <span class="rm-code">ROOM<b id="rmCode"></b></span>
       <span id="rmConn" class="rm-conn">연결 중…</span>
-      <div class="rm-nick"><label for="nick">내 닉네임</label><input type="text" id="nick" maxlength="16"></div>
+      <div class="rm-nick"><label for="nick">내 닉네임</label><input type="text" id="nick" maxlength="16"><button type="button" class="btn ghost snd" id="sndBtn" aria-label="효과음 켜기/끄기" title="효과음">🔊</button></div>
     </div>
-    <div id="rmLinks" class="rm-links hidden">
-      <p class="field-heading">방장 전용 · 링크 공유</p>
+    <details id="rmLinks" class="rm-links hidden" open>
+      <summary class="field-heading">방장 전용 · 링크 공유 <span class="sum-hint">접기/펼치기</span></summary>
       <div class="rm-link"><span>🛠️ 방장 관리 (북마크용)</span><button class="btn ghost" data-copy="host">복사</button></div>
       <div class="rm-link"><span>📌 고정 관전 (항상 최신 방)</span><button class="btn ghost" data-copy="live">복사</button></div>
       <div class="rm-link"><span>👀 관전 (채널)</span><button class="btn ghost" data-copy="view">복사</button></div>
       <div class="rm-link"><span>🔴 A팀장 (DM)</span><button class="btn ghost" data-copy="A">복사</button></div>
       <div class="rm-link"><span>🔵 B팀장 (DM)</span><button class="btn ghost" data-copy="B">복사</button></div>
       <div class="rm-link"><span>➕ 새 방 (같은 팀 · 맵 풀)</span><button class="btn ghost" id="newRoomBtn">만들기</button></div>
-    </div>
+    </details>
 
     <div class="layout">
       <div>
@@ -244,8 +348,9 @@
           </div>
         </div>
 
-        <div class="arena">
-          <div class="arena-topline"><span class="arena-label" id="arenaLabel">MATCH SETUP</span><span class="arena-label" id="roundLabel"></span></div>
+        <div class="arena" id="arena">
+          <div class="float-layer" id="floatLayer" aria-hidden="true"></div>
+          <div class="arena-topline"><span class="arena-label" id="arenaLabel">MATCH SETUP</span><span class="arena-label mode-label" id="modeLabel"></span><span class="arena-label" id="roundLabel"></span></div>
 
           <!-- 1. 가위바위보 -->
           <div class="phase" id="phRps">
@@ -267,6 +372,11 @@
           <div class="phase hidden" id="phPost">
             <p class="phase-msg" id="postMsg"></p>
             <div class="roulette" id="roulette"><div class="strip" id="strip"></div></div>
+            <div id="banBox" class="ban-box hidden">
+              <div class="ban-head"><span id="banTurn"></span><span id="banClock" class="ban-clock"></span></div>
+              <div class="ban-bar"><i id="banBar"></i></div>
+              <div class="ban-grid" id="banGrid"></div>
+            </div>
             <div id="rollBox" class="hidden" style="max-width:420px;margin:0 auto"><button class="btn" id="rollBtn" style="margin-top:8px">🎰 맵 돌리기</button></div>
             <div id="sideBox" class="hidden">
               <p class="phase-title" style="margin-top:14px">이긴 팀 · 진영 선택</p>
@@ -275,7 +385,11 @@
             <div class="final hidden" id="final"></div>
           </div>
 
-          <div style="max-width:420px;margin:0 auto"><button class="btn ghost hidden" id="againBtn" style="margin-top:16px">🔁 새 게임</button></div>
+          <div class="arena-actions">
+            <button class="btn ghost hidden" id="copyRes" data-act="copyRes">📋 결과 복사</button>
+            <button class="btn ghost hidden" id="againBtn">🔁 새 게임</button>
+          </div>
+          <div class="reacts" id="reacts" aria-label="반응 보내기"></div>
         </div>
         <p class="note" id="myRole"></p>
       </div>
@@ -283,6 +397,10 @@
       <aside class="people">
         <p class="field-heading">참여자 <span id="peopleCount"></span></p>
         <ul id="people"></ul>
+        <div id="histWrap" class="hidden">
+          <p class="field-heading hist-head">경기 기록</p>
+          <ul class="hist" id="hist"></ul>
+        </div>
       </aside>
     </div>
   </section>
@@ -290,6 +408,6 @@
   <footer><span>팬메이드 · Riot Games 무관</span><span>실시간: 공개 MQTT</span></footer>
 </div>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>
