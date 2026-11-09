@@ -226,11 +226,14 @@
     return { r: /^[a-z0-9]{4,12}$/.test(r) ? r : null, cap: p.get('cap'), live: /^[0-9a-f]{8}$/.test(live) ? live : null, host: p.has('host'),
       adm: /^[0-9a-f]{32}$/.test(p.get('adm') || '') ? p.get('adm') : null, team: /^[AB]-[0-9a-f]{24}$/.test(p.get('team') || '') ? p.get('team') : null };
   }
+  // 공유 링크는 항상 공개 주소(GitHub Pages) 기준 · 로컬에서 열어도 친구가 열 수 있게
+  const PUBLIC = 'https://seungjaehh.github.io/valorant-side/';
+  const siteBase = () => /^https?:$/.test(location.protocol) && !/^(localhost|127\.|\[::1\]|0\.0\.0\.0)/.test(location.hostname) ? location.origin + location.pathname : PUBLIC;
   function linkFor(kind) {
-    const u = location.origin + location.pathname + '#room=' + room;
+    const u = siteBase() + '#room=' + room;
     if (kind === 'view') return u;
-    if (kind === 'live') return location.origin + location.pathname + '#live=' + group;
-    if (kind === 'host') return location.origin + location.pathname + '#host';
+    if (kind === 'live') return siteBase() + '#live=' + group;
+    if (kind === 'host') return siteBase() + '#host';
     if (kind === 'team' && myTeam) return `${u}&team=${myTeam.side}-${myTeam.k}`;
     if (!adm || !adm.toks) return u;
     if (kind === 'adm') return `${u}&adm=${adm.seed}`;
