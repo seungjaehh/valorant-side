@@ -167,25 +167,46 @@
     createRoom(pool, $('initA').value.trim() || 'A팀', $('initB').value.trim() || 'B팀', o);
   };
 
-  // 고정 관전 링크: 방장 브라우저마다 그룹 코드 하나, 새 방을 만들 때마다 그 그룹의 '최신 방'이 갱신됨
-  let group = ls.get('vs_group'); if (!/^[0-9a-f]{8}$/.test(group || '')) { group = hex(4); ls.set('vs_group', group); }
-  let follow = null, followGroup = null;
-  function startFollow(g, i = 0) {
-    if (followGroup === g && follow && i === 0) return;
-    stopFollow(); followGroup = g;
+  // 기본 주소 = 최신 방 자동 관전. '최신 방' 알림은 호스트 키(ECDSA)로 서명 → 아무나 바꿔치기 못 함
+  const HOST_PUB = { kty: 'EC', crv: 'P-256', x: 'BiWGbuCnaZ-PgXxHB9z2Yi8pFV4O3gxct8lAOAcFSVU', y: 'sbnKr5Y9FSAdgesaqZ_0EFEKZT2TeNXZ94K8aAigzoM' };
+  const ECP = { name: 'ECDSA', namedCurve: 'P-256' }, ECS = { name: 'ECDSA', hash: 'SHA-256' }, LIVE_T = ROOT + 'live/main';
+  const pubKeyP = crypto.subtle.importKey('jwk', HOST_PUB, ECP, false, ['verify']);
+  let hostKey = null; // 서명 키 (호스트 링크로 들어온 브라우저만)
+  async function loadHostKey(d) {
+    if (!/^[A-Za-z0-9_-]{43}$/.test(d || '')) return null;
+    try {
+      const k = await crypto.subtle.importKey('jwk', { ...HOST_PUB, d }, ECP, false, ['sign']);
+      const m = new TextEncoder().encode('chk|' + d.length);
+      return (await crypto.subtle.verify(ECS, await pubKeyP, await crypto.subtle.sign(ECS, k, m), m)) ? k : null;
+    } catch { return null; }
+  }
+  const liveMsg = d => new TextEncoder().encode('live|' + d.room + '|' + d.t);
+  async function liveSigned(r) {
+    const d = { room: r, t: Date.now() };
+    d.sig = b64(new Uint8Array(await crypto.subtle.sign(ECS, hostKey, liveMsg(d))));
+    return JSON.stringify(d);
+  }
+  const liveOk = async d => { try { return await crypto.subtle.verify(ECS, await pubKeyP, unb64(d.sig), liveMsg(d)); } catch { return false; } };
+  let follow = null, followOn = false, liveT = 0;
+  function startFollow(i = 0) {
+    if (followOn && follow && i === 0) return;
+    stopFollow(); followOn = true;
     if (!window.mqtt) return;
     const c = window.mqtt.connect(BROKERS[i % BROKERS.length], { clientId: 'vsf_' + cid + '_' + hex(2), clean: true, connectTimeout: 6000, reconnectPeriod: 3000 });
     follow = c; let ok = false;
-    c.on('connect', () => { ok = true; c.subscribe(ROOT + 'live/' + g, { qos: 1 }); });
+    c.on('connect', () => { ok = true; c.subscribe(LIVE_T, { qos: 1 }); });
     c.on('error', () => {});
-    c.on('message', (t, b) => {
+    c.on('message', async (t, b) => {
       if (follow !== c) return;
       let d; try { d = JSON.parse(b.toString()); } catch { return; }
-      if (d && /^[a-z0-9]{4,12}$/.test(d.room || '') && d.room !== room && !pendingCreate) { myCap = null; join(d.room); }
+      if (!d || !/^[a-z0-9]{4,12}$/.test(d.room || '') || typeof d.t !== 'number' || typeof d.sig !== 'string' || d.t <= liveT) return;
+      if (!(await liveOk(d)) || follow !== c) return;
+      liveT = d.t;
+      if (d.room !== room && !pendingCreate) { myCap = null; join(d.room); }
     });
-    setTimeout(() => { if (!ok && follow === c && i + 1 < BROKERS.length) startFollow(g, i + 1); }, 7000);
+    setTimeout(() => { if (!ok && follow === c && i + 1 < BROKERS.length) startFollow(i + 1); }, 7000);
   }
-  function stopFollow() { if (follow) { try { follow.end(true); } catch {} } follow = null; followGroup = null; }
+  function stopFollow() { if (follow) { try { follow.end(true); } catch {} } follow = null; followOn = false; }
 
   // ---------- 방 상태 ----------
   let client = null, room = null, base = '';
@@ -222,8 +243,7 @@
   function parseHash() {
     const p = new URLSearchParams(location.hash.slice(1));
     const r = (p.get('room') || '').toLowerCase();
-    const live = (p.get('live') || '').toLowerCase();
-    return { r: /^[a-z0-9]{4,12}$/.test(r) ? r : null, cap: p.get('cap'), live: /^[0-9a-f]{8}$/.test(live) ? live : null, host: p.has('host'),
+    return { r: /^[a-z0-9]{4,12}$/.test(r) ? r : null, cap: p.get('cap'), hk: p.get('host') || null,
       adm: /^[0-9a-f]{32}$/.test(p.get('adm') || '') ? p.get('adm') : null, team: /^[AB]-[0-9a-f]{24}$/.test(p.get('team') || '') ? p.get('team') : null };
   }
   // 공유 링크는 항상 공개 주소(GitHub Pages) 기준 · 로컬에서 열어도 친구가 열 수 있게
@@ -232,8 +252,7 @@
   function linkFor(kind) {
     const u = siteBase() + '#room=' + room;
     if (kind === 'view') return u;
-    if (kind === 'live') return siteBase() + '#live=' + group;
-    if (kind === 'host') return siteBase() + '#host';
+    if (kind === 'live') return siteBase();
     if (kind === 'team' && myTeam) return `${u}&team=${myTeam.side}-${myTeam.k}`;
     if (!adm || !adm.toks) return u;
     if (kind === 'adm') return `${u}&adm=${adm.seed}`;
@@ -263,20 +282,25 @@
     announce(); renderChat(true);
   }
   function enter() {
-    const { r, cap, live, host, adm: admQ, team } = parseHash();
-    hostMode = host;
-    if (live || host) {
-      startFollow(host ? group : live);
+    const { r, cap, hk, adm: admQ, team } = parseHash();
+    if (hk) { // 호스트 링크: 키 확인 후 주소창에서 지움
+      history.replaceState(null, '', location.pathname);
+      loadHostKey(hk).then(k => { if (k) { hostKey = k; ls.set('vs_hostkey', hk); } else alert('호스트 링크가 올바르지 않아'); enter(); });
+      return;
+    }
+    if (!r) { // 기본 주소: 최신 방 자동 관전 (호스트는 방이 없으면 방 만들기)
+      hostMode = !!hostKey;
+      startFollow();
       if (!room) {
         $('lobby').classList.add('hidden'); $('room').classList.remove('hidden');
-        $('rmCode').textContent = '…'; $('rpsMsg').textContent = host ? '방 불러오는 중…' : '방 생성 대기 중';
-        $('myRole').textContent = host ? '🛠️ 관리자' : '📌 최신 방 자동 관전';
-        if (host) setTimeout(() => { if (hostMode && !room) { $('lobby').classList.remove('hidden'); $('room').classList.add('hidden'); } }, 5000);
+        $('rmCode').textContent = '…'; $('rpsMsg').textContent = hostMode ? '방 불러오는 중…' : '방 생성 대기 중 · 방이 열리면 자동으로 들어가';
+        $('myRole').textContent = hostMode ? '🛠️ 호스트' : '📌 최신 방 자동 관전';
+        if (hostMode) setTimeout(() => { if (hostMode && !room) { $('lobby').classList.remove('hidden'); $('room').classList.add('hidden'); } }, 4000);
       }
       return;
     }
+    hostMode = false;
     stopFollow();
-    if (!r) { room = null; if (client) { try { client.end(true); } catch {} client = null; } $('lobby').classList.remove('hidden'); $('room').classList.add('hidden'); return; }
     const capOk = cap && /^[AB]-[0-9a-f]{16}$/.test(cap);
     if (capOk) ss.set('vs_cap_' + r, cap);
     if (admQ) ls.set('vs_adm_' + r, admQ);
@@ -321,7 +345,7 @@
         const p = pendingCreate; pendingCreate = null;
         pub('meta', await metaFor(p.seed, 0, p.opts || {}, p.pool));
         pub('round', { id: hex(4), n: 1, teamA: p.teamA, teamB: p.teamB });
-        c.publish(ROOT + 'live/' + group, JSON.stringify({ room, t: Date.now() }), { qos: 1, retain: true });
+        if (hostKey) { const r0 = room; liveSigned(r0).then(m => { if (client === c) c.publish(LIVE_T, m, { qos: 1, retain: true }); }); }
       }
     });
     c.on('reconnect', () => setConn('재연결…', true));
@@ -1136,5 +1160,5 @@
     }).join('') || '<li><span class="nm" style="color:var(--muted)">연결 중…</span></li>';
   }
 
-  enter();
+  loadHostKey(ls.get('vs_hostkey')).then(k => { hostKey = k; if (!k) ls.del && ls.del('vs_hostkey'); enter(); });
 })();
