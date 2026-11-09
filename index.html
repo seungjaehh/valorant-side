@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>발로란트 공수 결정기</title>
-<meta name="description" content="발로란트 내전용 실시간 방: 팀장 가위바위보 → 진 팀 맵 룰렛 → 이긴 팀 공격/수비 선택">
+<title>발로란트 매치 준비</title>
+<meta name="description" content="발로란트 내전 매치 준비: 팀장 가위바위보 → VCT식 Bo1·Bo3·Bo5 맵 밴픽 → 공수 선택 · 팀 채팅 · 관리자 링크">
 <meta name="theme-color" content="#0b1117">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -252,6 +252,82 @@
   .h-body b{font-size:13px;color:var(--text)}
   .h-body>span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+
+  /* 밴픽 순서 */
+  .veto-seq{list-style:none;display:flex;flex-wrap:wrap;gap:4px;margin:0 0 12px;padding:0}
+  .sq{display:flex;flex-direction:column;align-items:center;min-width:52px;padding:4px 6px;border:1px solid var(--line);border-top:2px solid #46535c;background:#0d161e;font-size:11px;font-weight:700;color:var(--muted);line-height:1.3}
+  .sq b{font:800 12px var(--display)}
+  .sq small{font-size:10px;font-weight:600;color:#d9e1e6;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sq.t-A{border-top-color:var(--atk)}.sq.t-A b{color:#ff9ba4}.sq.t-B{border-top-color:var(--def)}.sq.t-B b{color:#8ae7d6}
+  .sq.pick{background:#1a2420}.sq.side{background:#161c26}
+  .sq.done{opacity:.55}.sq.now{opacity:1;border-color:#ffd166;color:#ffe1a1;box-shadow:0 0 12px #ffd16633}
+  .bcard.picked{border-color:#ffd166aa;border-bottom-color:#ffd166}
+  .bcard.picked .bname{visibility:hidden}
+  .bcard.picked .bstamp{display:flex;background:#0b111766}
+  .bcard.picked .bstamp b{color:#ffd166;border-color:#ffd166;transform:none;font-size:20px;letter-spacing:2px}
+  .bcard.picked.no-anim .bstamp{animation:none}
+  .ban-grid.pick-turn.my-turn .bcard:not(:disabled){animation-name:pulseg}
+  @media(hover:hover){.ban-grid.pick-turn.my-turn .bcard:not(:disabled):hover{border-color:#ffd166;box-shadow:0 0 0 1px #ffd166,0 8px 18px #ffd16633}}
+  @keyframes pulseg{50%{box-shadow:0 0 0 1px #ffd16688,0 0 16px #ffd16630}}
+  .adm-tag{display:inline-block;font-size:11px;font-weight:700;color:#ffe1a1;background:#ffd16614;border:1px solid #ffd16655;padding:0 5px;margin-left:4px;vertical-align:1px}
+  /* 시리즈 결과 */
+  .final:has(.series){max-width:620px}
+  .series{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px}
+  .sg{display:flex;flex-direction:column;gap:3px;min-height:120px;justify-content:flex-end;padding:12px;border:1px solid #ffd16640;text-align:left;font-size:13px;font-weight:700}
+  .sg small{font:600 10px var(--display);letter-spacing:1.5px;color:#d0b77f}
+  .sg b{font-size:22px;color:#ffe4a1;font-weight:900}
+  .sg.pending{opacity:.75}.sg .muted{color:var(--muted)}
+  /* 반응 쿨다운 */
+  .reacts{position:relative;padding-bottom:6px}
+  .reacts.cool .react{opacity:.45;pointer-events:none}
+  .reacts.cool::after{content:attr(data-msg);position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);font-size:10px;color:var(--muted);white-space:nowrap}
+  .reacts.run::before{content:"";position:absolute;left:calc(50% - 60px);bottom:0;width:120px;height:2px;background:var(--muted);transform-origin:left;animation:cd var(--cd,1.5s) linear forwards}
+  @keyframes cd{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+  /* 관리자 패널 */
+  .adm-panel{border:1px solid #ffd16644;background:linear-gradient(125deg,#ffd16608,transparent 40%);padding:12px 14px;margin-bottom:18px}
+  .adm-panel summary{cursor:pointer;list-style:none;margin:0;color:#ffe1a1}
+  .adm-panel summary::-webkit-details-marker{display:none}
+  .adm-panel[open] summary{margin-bottom:12px}
+  .adm-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 24px}
+  .adm-h{font:600 11px var(--display);letter-spacing:2px;color:var(--muted);margin:10px 0 6px}
+  .adm-col>.adm-h:first-child{margin-top:0}
+  .adm-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+  .adm-btns .btn{width:auto;margin:0;min-height:34px;padding:6px 10px}
+  .btn.ghost:disabled{opacity:.4;cursor:default}
+  .adm-panel .opt{margin-bottom:6px}
+  .adm-set{border-top:1px dashed var(--line);margin-top:10px;padding-top:4px}
+  .adm-set .maps{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+  .adm-set .chip{padding:7px 8px;font-size:12px}
+  .badge.adm{color:#ffe1a1;border-color:#ffd16666;background:#ffd16612}
+  .badge.soft{opacity:.75;font-weight:600}
+  /* 채팅 */
+  .side-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .layout{grid-template-columns:minmax(0,1fr) 300px}
+  .chat{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line);border-top:2px solid #46535c;background:linear-gradient(150deg,#14212b,#0b131c);padding:10px}
+  .chat-tabs{display:flex;gap:4px;margin-bottom:8px}
+  .ctab{position:relative;flex:1;min-width:0;height:32px;border:1px solid var(--line);background:#0d161e;color:var(--muted);font:700 12px "Noto Sans KR",sans-serif;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px}
+  .ctab.on{color:var(--text);background:#1b2a34;border-color:#5a6b78}
+  .ctab.t-A.on{border-bottom:2px solid var(--atk)}.ctab.t-B.on{border-bottom:2px solid var(--def)}.ctab.t-all.on{border-bottom:2px solid #ffd166}
+  .ctab i{font-style:normal;font-size:10px;background:var(--atk);color:#fff;padding:0 5px;margin-left:4px;border-radius:8px}
+  .chat-log{list-style:none;margin:0;padding:0 2px 0 0;height:260px;overflow:auto;scrollbar-width:thin;scrollbar-color:#40515f #0b131c;font-size:13px}
+  .chat-log li{padding:5px 2px;border-bottom:1px solid #ffffff06;overflow-wrap:anywhere}
+  .chat-log li.empty{color:var(--muted);font-size:12px;text-align:center;padding:20px 6px;border:0}
+  .chat-log .cn{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#9fb0bc}
+  .chat-log .cn .badge{min-height:16px;padding:0 4px;font-size:9px}
+  .chat-log .cn .adm-tag{margin:0;font-size:10px}
+  .chat-log time{margin-left:auto;font-weight:400;color:#62737f;font-size:10px}
+  .chat-log li.mine .cn{color:#ffe1a1}
+  .chat-log .cm{display:block;color:#e2e8ec;line-height:1.5;margin-top:1px}
+  .chat-form{position:relative;display:flex;gap:6px;margin-top:8px}
+  .chat-form input{height:38px;font-size:14px}
+  .chat-form input:disabled{opacity:.5}
+  .chat-form .btn{width:44px;min-height:38px;margin:0;padding:0;flex:none;clip-path:none}
+  .chat-hint{position:absolute;left:0;top:-22px;font-size:11px;color:#ffe1a1;background:#0b1117ee;padding:2px 6px;opacity:0;transition:opacity .2s;pointer-events:none}
+  .chat-hint.on{opacity:1}
+  #teamLinkBtn{margin-top:8px;width:100%}
+  .phase-msg.forced{color:#ffe1a1}
+  @media(max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}.side-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.chat-log{height:220px}}
+  @media(max-width:650px){.adm-grid{grid-template-columns:minmax(0,1fr)}.side-col{display:flex}.sq{min-width:44px}}
   footer{display:flex;align-items:center;justify-content:space-between;gap:16px;color:#80919f;font-size:11px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
   @media(hover:hover){.btn:not(.ghost):not(.def):hover:not(:disabled){background:#ff6170}.btn.ghost:hover{border-color:var(--muted);color:#fff}}
   @media(max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}.maps{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -279,13 +355,13 @@
 <body>
 <div class="wrap">
   <header class="masthead">
-    <div class="brand"><span class="brand-mark" aria-hidden="true"></span>SIDE / SELECT</div>
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span>MATCH / SETUP</div>
     <div class="mast-meta"><span class="status-dot" aria-hidden="true"></span>VALORANT CUSTOM</div>
   </header>
   <div class="hero">
-    <p class="eyebrow">THE MATCH STARTS HERE / 매치 준비</p>
-    <h1>공수 <span>결정기</span></h1>
-    <p class="sub">팀장 가위바위보 → 맵 밴 (또는 룰렛) → 공수 선택 · 관전자는 실시간으로 함께 보기</p>
+    <p class="eyebrow">THE MATCH STARTS HERE / VALORANT CUSTOM</p>
+    <h1>매치 <span>준비</span></h1>
+    <p class="sub">팀장 가위바위보 → VCT식 맵 밴픽 (Bo1 · Bo3 · Bo5) → 공수 선택 · 팀별 채팅 · 관전자 실시간 · 관리자 링크로 진행 관리</p>
   </div>
 
   <!-- 로비 -->
@@ -297,10 +373,13 @@
     </div>
     <p class="field-heading">MAP DECISION</p>
     <div class="modes">
-      <label class="mode"><input type="radio" name="mode" value="ban" checked><span class="mode-t">🚫 맵 밴 <em>대회 방식</em></span><span class="mode-d">가위바위보 승자부터 번갈아 밴 → 남은 1개로 경기 → 마지막 밴을 안 한 팀이 공수 선택</span></label>
+      <label class="mode"><input type="radio" name="mode" value="ban" checked><span class="mode-t">🚫 맵 밴픽 <em>VCT 방식</em></span><span class="mode-d">가위바위보 승자 = 상위 시드. 단판은 번갈아 밴, Bo3·Bo5는 밴 → 픽 (상대가 진영) → 남은 맵 결정전</span></label>
       <label class="mode"><input type="radio" name="mode" value="roulette"><span class="mode-t">🎰 맵 룰렛</span><span class="mode-d">진 팀장이 룰렛 → 이긴 팀장이 공수 선택</span></label>
     </div>
     <div class="opts">
+      <label class="opt" id="fmtRow">🏆 경기 수
+        <select id="fmtSel"><option value="1" selected>단판 (Bo1)</option><option value="3">3판 2선승 (Bo3)</option><option value="5">5판 3선승 (Bo5)</option></select>
+      </label>
       <label class="opt" id="timerRow">⏱️ 밴 제한시간
         <select id="banTimer"><option value="0">없음</option><option value="20">20초</option><option value="30" selected>30초</option><option value="45">45초</option><option value="60">60초</option></select>
       </label>
@@ -313,7 +392,7 @@
     <div class="maps" id="mapPool"></div>
     <p class="pool-hint" id="poolHint"></p>
     <button class="btn" id="createBtn">방 만들기</button>
-    <p class="note">👀 <b>관전 링크</b> → 채널 · 🔴 <b>A팀장</b> / 🔵 <b>B팀장 링크</b> → 각 팀장 DM</p>
+    <p class="note">🛠️ 만든 사람은 <b>관리자</b>가 돼. 방 안 관리자 패널에서 👀 관전 / 🔴🔵 팀장 / 💬 팀원 채팅 링크를 복사해서 나눠 줘.</p>
   </section>
 
   <!-- 방 -->
@@ -323,14 +402,50 @@
       <span id="rmConn" class="rm-conn">연결 중…</span>
       <div class="rm-nick"><label for="nick">내 닉네임</label><input type="text" id="nick" maxlength="16"><button type="button" class="btn ghost snd" id="sndBtn" aria-label="효과음 켜기/끄기" title="효과음">🔊</button></div>
     </div>
-    <details id="rmLinks" class="rm-links hidden" open>
-      <summary class="field-heading">방장 전용 · 링크 공유 <span class="sum-hint">접기/펼치기</span></summary>
-      <div class="rm-link"><span>🛠️ 방장 관리 (북마크용)</span><button class="btn ghost" data-copy="host">복사</button></div>
-      <div class="rm-link"><span>📌 고정 관전 (항상 최신 방)</span><button class="btn ghost" data-copy="live">복사</button></div>
-      <div class="rm-link"><span>👀 관전 (채널)</span><button class="btn ghost" data-copy="view">복사</button></div>
-      <div class="rm-link"><span>🔴 A팀장 (DM)</span><button class="btn ghost" data-copy="A">복사</button></div>
-      <div class="rm-link"><span>🔵 B팀장 (DM)</span><button class="btn ghost" data-copy="B">복사</button></div>
-      <div class="rm-link"><span>➕ 새 방 (같은 팀 · 맵 풀)</span><button class="btn ghost" id="newRoomBtn">만들기</button></div>
+    <details id="admPanel" class="adm-panel hidden">
+      <summary class="field-heading">🛠️ 관리자 패널 <span class="sum-hint">이 화면은 관리자만 · 접기/펼치기</span></summary>
+      <div class="adm-grid">
+        <div class="adm-col">
+          <p class="adm-h">링크 공유</p>
+          <div class="rm-link"><span>🛠️ 관리자 (나만 · 다른 기기용)</span><button class="btn ghost" data-copy="adm">복사</button></div>
+          <div class="rm-link"><span>👀 관전 (채널)</span><button class="btn ghost" data-copy="view">복사</button></div>
+          <div class="rm-link"><span>📌 고정 관전 (항상 최신 방)</span><button class="btn ghost" data-copy="live">복사</button></div>
+          <div class="rm-link"><span>🔴 A팀장 (DM)</span><button class="btn ghost" data-copy="A">복사</button></div>
+          <div class="rm-link"><span>🔵 B팀장 (DM)</span><button class="btn ghost" data-copy="B">복사</button></div>
+          <div class="rm-link"><span>💬 A팀원 채팅</span><button class="btn ghost" data-copy="tA">복사</button></div>
+          <div class="rm-link"><span>💬 B팀원 채팅</span><button class="btn ghost" data-copy="tB">복사</button></div>
+        </div>
+        <div class="adm-col">
+          <p class="adm-h">진행</p>
+          <div class="adm-btns" id="admProg">
+            <button class="btn ghost" id="admUndo" title="마지막 밴/픽/진영 선택 취소">↩️ 한 단계 되돌리기</button>
+            <button class="btn ghost" data-force="A">🅰️ A가 선택권 (가위바위보 생략)</button>
+            <button class="btn ghost" data-force="B">🅱️ B가 선택권 (가위바위보 생략)</button>
+            <button class="btn ghost" id="admRestart">🔄 이번 게임 처음부터</button>
+            <button class="btn ghost" id="admNew">⏭️ 다음 게임</button>
+          </div>
+          <p class="adm-h">관리</p>
+          <label class="opt"><input type="checkbox" id="admNoReact"> 반응 이모지 끄기</label>
+          <label class="opt"><input type="checkbox" id="admNoChat"> 전체 채팅 잠그기 (팀 채팅은 유지)</label>
+          <div class="adm-btns">
+            <button class="btn ghost" id="admReissue">🔑 팀장 링크 재발급</button>
+            <button class="btn ghost" id="admClearHist">🧹 경기 기록 지우기</button>
+            <button class="btn ghost" id="newRoomBtn">➕ 새 방 (같은 팀 · 맵 풀)</button>
+          </div>
+        </div>
+      </div>
+      <div class="adm-set">
+        <p class="adm-h">규칙 · 맵 풀 (적용하면 가위바위보부터 다시)</p>
+        <div class="opts">
+          <label class="opt">방식 <select id="admMode"><option value="ban">🚫 밴픽</option><option value="roulette">🎰 룰렛</option></select></label>
+          <label class="opt" id="admFmtRow">경기 수 <select id="admFmt"><option value="1">Bo1</option><option value="3">Bo3</option><option value="5">Bo5</option></select></label>
+          <label class="opt">제한시간 <select id="admTimer"><option value="0">없음</option><option value="20">20초</option><option value="30">30초</option><option value="45">45초</option><option value="60">60초</option></select></label>
+          <label class="opt"><input type="checkbox" id="admNoRep"> 한 맵 제외</label>
+        </div>
+        <div class="maps" id="admPool"></div>
+        <p class="pool-hint" id="admPoolHint"></p>
+        <button class="btn" id="admApply" style="margin-top:10px">설정 적용</button>
+      </div>
     </details>
 
     <div class="layout">
@@ -375,11 +490,12 @@
             <div id="banBox" class="ban-box hidden">
               <div class="ban-head"><span id="banTurn"></span><span id="banClock" class="ban-clock"></span></div>
               <div class="ban-bar"><i id="banBar"></i></div>
+              <ol class="veto-seq" id="vetoSeq" aria-label="밴픽 순서"></ol>
               <div class="ban-grid" id="banGrid"></div>
             </div>
             <div id="rollBox" class="hidden" style="max-width:420px;margin:0 auto"><button class="btn" id="rollBtn" style="margin-top:8px">🎰 맵 돌리기</button></div>
             <div id="sideBox" class="hidden">
-              <p class="phase-title" style="margin-top:14px">이긴 팀 · 진영 선택</p>
+              <p class="phase-title" style="margin-top:14px" id="sideTitle">진영 선택</p>
               <div class="side-pick"><button class="btn" id="pickAtk">⚔️ 공격</button><button class="btn def" id="pickDef">🛡️ 수비</button></div>
             </div>
             <div class="final hidden" id="final"></div>
@@ -394,13 +510,25 @@
         <p class="note" id="myRole"></p>
       </div>
 
-      <aside class="people">
+      <aside class="side-col">
+      <section class="chat" id="chatBox" aria-label="채팅">
+        <div class="chat-tabs" id="chatTabs" role="tablist"></div>
+        <ul class="chat-log" id="chatLog" aria-live="polite"></ul>
+        <form class="chat-form" id="chatForm" autocomplete="off">
+          <input type="text" id="chatIn" maxlength="200" placeholder="메시지" aria-label="채팅 입력">
+          <button class="btn" type="submit" aria-label="보내기">↵</button>
+          <span class="chat-hint" id="chatHint"></span>
+        </form>
+        <button type="button" class="btn ghost mini hidden" id="teamLinkBtn" data-copy="team">💬 팀원 채팅 링크 복사</button>
+      </section>
+      <div class="people">
         <p class="field-heading">참여자 <span id="peopleCount"></span></p>
         <ul id="people"></ul>
         <div id="histWrap" class="hidden">
           <p class="field-heading hist-head">경기 기록</p>
           <ul class="hist" id="hist"></ul>
         </div>
+      </div>
       </aside>
     </div>
   </section>
@@ -408,6 +536,6 @@
   <footer><span>팬메이드 · Riot Games 무관</span><span>실시간: 공개 MQTT</span></footer>
 </div>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="app.js?v=9"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
