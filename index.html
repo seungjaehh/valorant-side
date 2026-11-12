@@ -404,6 +404,7 @@
     <div class="rm-head">
       <span class="rm-code">ROOM<b id="rmCode"></b></span>
       <span id="rmConn" class="rm-conn">연결 중…</span>
+      <a class="btn ghost mini hidden" id="hostNewBtn" href="#host" title="호스트 전용">➕ 방 만들기</a>
       <div class="rm-nick"><label for="nick">내 닉네임</label><input type="text" id="nick" maxlength="16"><button type="button" class="btn ghost snd" id="sndBtn" aria-label="효과음 켜기/끄기" title="효과음">🔊</button></div>
     </div>
     <details id="admPanel" class="adm-panel hidden">
@@ -552,6 +553,6 @@
   <footer><span>팬메이드 · Riot Games 무관</span><span>실시간: 공개 MQTT</span></footer>
 </div>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="app.js?v=15"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>

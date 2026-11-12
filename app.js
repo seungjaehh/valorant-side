@@ -150,7 +150,8 @@
     const r = hex(3), seed = hex(16);
     ls.set('vs_adm_' + r, seed);
     pendingCreate = { seed, pool, teamA, teamB, opts };
-    if (hostMode) { myCap = null; join(r); } else location.hash = 'room=' + r;
+    if (hostKey) { history.replaceState(null, '', location.pathname); hostMode = true; myCap = null; join(r); startFollow(); } // 기본 주소로 돌아가 최신 방(=내 방) 따라감
+    else location.hash = 'room=' + r;
   }
   // 방 설정(meta): 관리자 시드에서 팀장 해시·관리자 해시를 만들어 넣음
   async function metaFor(seed, gen, o, pool) {
@@ -243,7 +244,7 @@
   function parseHash() {
     const p = new URLSearchParams(location.hash.slice(1));
     const r = (p.get('room') || '').toLowerCase();
-    return { r: /^[a-z0-9]{4,12}$/.test(r) ? r : null, cap: p.get('cap'), hk: p.get('host') || null,
+    return { r: /^[a-z0-9]{4,12}$/.test(r) ? r : null, cap: p.get('cap'), hk: p.get('host') || null, hostQ: p.has('host'),
       adm: /^[0-9a-f]{32}$/.test(p.get('adm') || '') ? p.get('adm') : null, team: /^[AB]-[0-9a-f]{24}$/.test(p.get('team') || '') ? p.get('team') : null };
   }
   // 공유 링크는 항상 공개 주소(GitHub Pages) 기준 · 로컬에서 열어도 친구가 열 수 있게
@@ -282,10 +283,17 @@
     announce(); renderChat(true);
   }
   function enter() {
-    const { r, cap, hk, adm: admQ, team } = parseHash();
-    if (hk) { // 호스트 링크: 키 확인 후 주소창에서 지움
-      history.replaceState(null, '', location.pathname);
+    const { r, cap, hk, hostQ, adm: admQ, team } = parseHash();
+    $('hostNewBtn').classList.toggle('hidden', !hostKey);
+    if (hk) { // 호스트 링크: 키 확인 후 주소창에서 키만 지움 (#host 로 남겨서 방 만들기 화면)
+      history.replaceState(null, '', location.pathname + '#host');
       loadHostKey(hk).then(k => { if (k) { hostKey = k; ls.set('vs_hostkey', hk); } else alert('호스트 링크가 올바르지 않아'); enter(); });
+      return;
+    }
+    if (hostQ && hostKey) { // 호스트: 방 만들기 화면
+      hostMode = true; stopFollow();
+      room = null; if (client) { try { client.end(true); } catch {} client = null; }
+      $('lobby').classList.remove('hidden'); $('room').classList.add('hidden');
       return;
     }
     if (!r) { // 기본 주소: 최신 방 자동 관전 (호스트는 방이 없으면 방 만들기)
@@ -301,6 +309,7 @@
     }
     hostMode = false;
     stopFollow();
+    if (hostQ) { history.replaceState(null, '', location.pathname); enter(); return; } // 키 없는 #host = 기본 주소
     const capOk = cap && /^[AB]-[0-9a-f]{16}$/.test(cap);
     if (capOk) ss.set('vs_cap_' + r, cap);
     if (admQ) ls.set('vs_adm_' + r, admQ);
