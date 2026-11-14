@@ -111,11 +111,11 @@
     $('poolHint').textContent = poolDesc(n, lobbyMode(), lobbyFmt());
   };
   function poolDesc(n, mode, fmt) {
-    if (mode !== 'ban') return n < 2 ? '맵 2개 이상 필요' : `룰렛 후보 ${n}개`;
-    if (n < FMT_NEED[fmt]) return `Bo${fmt}는 맵 ${FMT_NEED[fmt]}개 이상 필요`;
-    if (fmt === 1) return `밴 ${n - 1}번 → 남은 1개로 결정${n > 9 ? ' · 7개 정도 추천' : ''}`;
+    if (mode !== 'ban') return n < 2 ? '맵을 2개 이상 선택해 주세요' : `룰렛 후보 ${n}개`;
+    if (n < FMT_NEED[fmt]) return `Bo${fmt}는 맵이 ${FMT_NEED[fmt]}개 이상 필요해요`;
+    if (fmt === 1) return `맵 ${n - 1}개 밴 → 남은 맵으로 경기${n > 9 ? ' · 맵은 7개 정도를 추천해요' : ''}`;
     const extra = n - 2 - (fmt === 3 ? 2 : 4) - 1;
-    return `밴 2 → 픽 ${fmt === 3 ? 2 : 4} → ${extra > 0 ? `밴 ${extra} → ` : ''}결정전 · 총 ${fmt}맵`;
+    return `맵 2개 밴 → ${fmt === 3 ? 2 : 4}개 픽 → ${extra > 0 ? `맵 ${extra}개 밴 → ` : ''}결정전 · 총 ${fmt}개 맵`;
   }
   const setPool = f => { $('mapPool').querySelectorAll('input').forEach((i, k) => (i.checked = f(i.value, k))); syncPool(); };
   $('mapPool').onchange = syncPool;
@@ -164,7 +164,7 @@
   $('createBtn').onclick = () => {
     const pool = pickedPool(), o = lobbyOpts();
     const need = o.mode === 'ban' ? FMT_NEED[o.fmt] : 2;
-    if (pool.length < need) { alert(`맵을 ${need}개 이상 선택`); return; }
+    if (pool.length < need) { alert(`맵을 ${need}개 이상 선택해 주세요`); return; }
     createRoom(pool, $('initA').value.trim() || 'A팀', $('initB').value.trim() || 'B팀', o);
   };
 
@@ -287,7 +287,7 @@
     $('hostNewBtn').classList.toggle('hidden', !hostKey);
     if (hk) { // 호스트 링크: 키 확인 후 주소창에서 키만 지움 (#host 로 남겨서 방 만들기 화면)
       history.replaceState(null, '', location.pathname + '#host');
-      loadHostKey(hk).then(k => { if (k) { hostKey = k; ls.set('vs_hostkey', hk); } else alert('호스트 링크가 올바르지 않아'); enter(); });
+      loadHostKey(hk).then(k => { if (k) { hostKey = k; ls.set('vs_hostkey', hk); } else alert('호스트 링크가 올바르지 않아요'); enter(); });
       return;
     }
     if (hostQ && hostKey) { // 호스트: 방 만들기 화면
@@ -301,7 +301,7 @@
       startFollow();
       if (!room) {
         $('lobby').classList.add('hidden'); $('room').classList.remove('hidden');
-        $('rmCode').textContent = '…'; $('rpsMsg').textContent = hostMode ? '방 불러오는 중…' : '방 생성 대기 중 · 방이 열리면 자동으로 들어가';
+        $('rmCode').textContent = '…'; $('rpsMsg').textContent = hostMode ? '방 불러오는 중…' : '방이 열리기를 기다리는 중이에요 · 방이 열리면 자동으로 입장해요';
         $('myRole').textContent = hostMode ? '🛠️ 호스트' : '📌 최신 방 자동 관전';
         if (hostMode) setTimeout(() => { if (hostMode && !room) { $('lobby').classList.remove('hidden'); $('room').classList.add('hidden'); } }, 4000);
       }
@@ -333,7 +333,7 @@
     if (client) { try { client.end(true); } catch {} }
     connect(0);
     render();
-    setTimeout(() => { if (room === r && !meta && !pendingCreate) $('rpsMsg').textContent = '방을 찾을 수 없음 · 링크 확인 필요'; }, 7000);
+    setTimeout(() => { if (room === r && !meta && !pendingCreate) $('rpsMsg').textContent = '방을 찾을 수 없어요 · 링크를 확인해 주세요'; }, 7000);
   }
 
   // ---------- 연결 ----------
@@ -347,7 +347,7 @@
     client = c;
     let ok = false;
     c.on('connect', async () => {
-      ok = true; setConn('● 연결', false);
+      ok = true; setConn('● 연결됨', false);
       c.subscribe(base + '#', { qos: 1 });
       announce();
       if (pendingCreate) {
@@ -357,7 +357,7 @@
         if (hostKey) { const r0 = room; liveSigned(r0).then(m => { if (client === c) c.publish(LIVE_T, m, { qos: 1, retain: true }); }); }
       }
     });
-    c.on('reconnect', () => setConn('재연결…', true));
+    c.on('reconnect', () => setConn('다시 연결 중…', true));
     c.on('offline', () => setConn('연결 끊김', true));
     c.on('error', () => {});
     c.on('message', (t, b) => { if (client === c) queue(t, b); });
@@ -564,7 +564,7 @@
     const b = e.target.closest('.react'); if (!b || !client || (meta && meta.noReact)) return;
     const now = Date.now();
     if (now < reactCoolUntil) return;
-    if (!allow('me_r', 4, 10000)) { coolReacts(Math.max(REACT_CD, 10000 - (now - buckets.me_r[0])), '잠시 후 다시'); return; }
+    if (!allow('me_r', 4, 10000)) { coolReacts(Math.max(REACT_CD, 10000 - (now - buckets.me_r[0])), '잠시 후 다시 시도해 주세요'); return; }
     coolReacts(REACT_CD);
     client.publish(base + 'r', JSON.stringify({ e: b.dataset.e, n: nick, cid }), { qos: 0 });
   };
@@ -627,14 +627,14 @@
   $('admApply').onclick = async () => {
     if (!isAdmin()) return;
     const o = admOpts(), pool = admPoolPicked(), need = o.mode === 'ban' ? FMT_NEED[o.fmt] : 2;
-    if (pool.length < need) { alert(`맵을 ${need}개 이상 선택`); return; }
-    if (S.res && !confirm('진행 중인 게임을 버리고 새 설정으로 다시 시작할까?')) return;
+    if (pool.length < need) { alert(`맵을 ${need}개 이상 선택해 주세요`); return; }
+    if (S.res && !confirm('진행 중인 게임을 초기화하고 새 설정으로 다시 시작할까요?')) return;
     await admMeta(o, pool);
     pub('round', { id: hex(4), n: S.n || 1, teamA: S.teamA, teamB: S.teamB });
   };
-  $('admNew').onclick = () => { if (isAdmin() && (!S.res || confirm('새 게임을 시작할까?'))) newRound(); };
+  $('admNew').onclick = () => { if (isAdmin() && (!S.res || confirm('새 게임을 시작할까요?'))) newRound(); };
   $('admRestart').onclick = () => {
-    if (isAdmin() && confirm('이번 게임을 가위바위보부터 다시 할까?')) pub('round', { id: hex(4), n: S.n || 1, teamA: S.teamA, teamB: S.teamB, ...(S.pool ? { pool: S.pool } : {}) });
+    if (isAdmin() && confirm('이번 게임을 가위바위보부터 다시 시작할까요?')) pub('round', { id: hex(4), n: S.n || 1, teamA: S.teamA, teamB: S.teamB, ...(S.pool ? { pool: S.pool } : {}) });
   };
   $('admUndo').onclick = () => {
     if (!isAdmin() || !isBan() || !S.veto.length) return;
@@ -645,21 +645,21 @@
     pub(`${S.round}/force`, { w: b.dataset.force, salt: hex(8), t: Date.now(), ...admTag() });
   }));
   $('admReissue').onclick = async () => {
-    if (!isAdmin() || !confirm('팀장 링크를 새로 발급할까? 이전 팀장 링크·팀 채팅 링크는 더 이상 안 되고, 게임은 가위바위보부터 다시 시작해.')) return;
+    if (!isAdmin() || !confirm('팀장 링크를 새로 발급할까요? 기존 팀장 링크와 팀 채팅 링크는 더 이상 사용할 수 없고, 게임은 가위바위보부터 다시 시작해요.')) return;
     await admMeta(meta, meta.pool, (meta.gen | 0) + 1);
     pub('round', { id: hex(4), n: S.n || 1, teamA: S.teamA, teamB: S.teamB, ...(S.pool ? { pool: S.pool } : {}) });
   };
-  $('admClearHist').onclick = () => { if (isAdmin() && confirm('경기 기록을 모두 지울까?')) pub('hist', []); };
+  $('admClearHist').onclick = () => { if (isAdmin() && confirm('경기 기록을 모두 지울까요?')) pub('hist', []); };
   $('newRoomBtn').onclick = () => {
     const pool = (meta && meta.pool && meta.pool.length) ? meta.pool : pickedPool();
-    if (!confirm('새 방을 만들까? (모든 링크 새로 발급)')) return;
+    if (!confirm('새 방을 만들까요? 모든 링크가 새로 발급돼요.')) return;
     createRoom(pool, S.teamA, S.teamB, meta || lobbyOpts());
   };
   $('room').addEventListener('click', async e => {
     const res = e.target.closest && e.target.closest('[data-act=copyRes]');
     if (res) {
       const txt = resultText();
-      try { await navigator.clipboard.writeText(txt); res.textContent = '✅ 복사됨 · 디스코드에 붙여넣기'; }
+      try { await navigator.clipboard.writeText(txt); res.textContent = '✅ 복사했어요 · 디스코드에 붙여넣어 주세요'; }
       catch { prompt('결과 복사', txt); }
       setTimeout(() => (res.textContent = '📋 결과 복사'), 1800);
       return;
@@ -668,7 +668,7 @@
     if (!k) return;
     const url = linkFor(k), b = e.target;
     if (!b.dataset.lbl) b.dataset.lbl = b.textContent;
-    try { await navigator.clipboard.writeText(url); b.textContent = '✅ 복사됨'; }
+    try { await navigator.clipboard.writeText(url); b.textContent = '✅ 복사했어요'; }
     catch { prompt('링크 복사', url); }
     clearTimeout(b._t); b._t = setTimeout(() => (b.textContent = b.dataset.lbl), 1500);
   });
@@ -722,11 +722,11 @@
     log.innerHTML = CH[chatTab].map(x => {
       const c = capOf(x.cid);
       return `<li class="${x.cid === cid ? 'mine' : ''}"><span class="cn">${x.ad ? '<span class="adm-tag">🛠</span>' : ''}${c ? `<span class="badge ${c}">${c}팀장</span>` : ''}${esc(x.n)}<time>${new Date(x.t).toTimeString().slice(0, 5)}</time></span><span class="cm">${esc(x.m)}</span></li>`;
-    }).join('') || `<li class="empty">${chatTab === 'all' ? '방 전체 채팅 · 관전자도 볼 수 있음' : '팀 채팅 · 우리 팀(팀장·팀원 링크)만 읽을 수 있음'}</li>`;
+    }).join('') || `<li class="empty">${chatTab === 'all' ? '전체 채팅은 관전자도 볼 수 있어요' : '팀 채팅은 우리 팀의 팀장·팀원 링크로 접속한 사람만 볼 수 있어요'}</li>`;
     if (stick || force) log.scrollTop = log.scrollHeight;
     const locked = chatTab === 'all' && meta && meta.noChat && !isAdmin();
     $('chatIn').disabled = locked;
-    $('chatIn').placeholder = locked ? '관리자가 전체 채팅을 잠갔어' : chatTab === 'all' ? '전체에게 메시지' : '우리 팀에게만 (암호화)';
+    $('chatIn').placeholder = locked ? '관리자가 전체 채팅을 잠갔어요' : chatTab === 'all' ? '모두에게 메시지 보내기' : '우리 팀에게만 메시지 보내기 (암호화)';
     $('teamLinkBtn').classList.toggle('hidden', !(myTeam && myCap && !myCap.bad));
   }
   $('chatTabs').onclick = e => {
@@ -738,8 +738,8 @@
     const inp = $('chatIn'), txt = inp.value.trim().slice(0, 200), ch = chatTab;
     if (!txt || !client || !ch) return;
     if (ch === 'all' && meta && meta.noChat && !isAdmin()) return;
-    if (!allow('me_c', 5, 6000)) { chatHint('너무 빨라 · 잠깐만'); return; }
-    if (CH[ch].length && CH[ch][CH[ch].length - 1].cid === cid && CH[ch][CH[ch].length - 1].m === txt && Date.now() - CH[ch][CH[ch].length - 1].t < 5000) { chatHint('같은 말 반복 금지'); return; }
+    if (!allow('me_c', 5, 6000)) { chatHint('잠시 후 다시 보내 주세요'); return; }
+    if (CH[ch].length && CH[ch][CH[ch].length - 1].cid === cid && CH[ch][CH[ch].length - 1].m === txt && Date.now() - CH[ch][CH[ch].length - 1].t < 5000) { chatHint('같은 메시지는 잠시 후 보내 주세요'); return; }
     const m = { id: hex(6), cid, n: nick, m: txt, t: Date.now(), ...(isAdmin() ? { ad: 1 } : {}) };
     let payload = m;
     if (ch !== 'all') {
@@ -774,7 +774,7 @@
       const rA = S.reveal.A, rB = S.reveal.B;
       const ok = (await sha(rA.c + '|' + rA.salt)) === S.commit.A.h && (await sha(rB.c + '|' + rB.salt)) === S.commit.B.h
         && [0, 1, 2].includes(rA.c) && [0, 1, 2].includes(rB.c);
-      if (!ok) { $('rpsMsg').innerHTML = '<span class="atkc">⚠️ 검증 실패 · 새 게임</span>'; render(); return; }
+      if (!ok) { $('rpsMsg').innerHTML = '<span class="atkc">⚠️ 검증에 실패했어요 · 새 게임을 시작해 주세요</span>'; render(); return; }
       const diff = (rA.c - rB.c + 3) % 3; // 1: A 승, 2: B 승, 0: 비김
       const live = Date.now() - Math.max(rA.t || 0, rB.t || 0) < FRESH_MS;
       await showDuel(rA.c, rB.c, diff, live);
@@ -837,11 +837,11 @@
     let t = `🎮 GAME ${S.n}${f > 1 ? ` · Bo${f}` : ''} · ${teamName('A')} vs ${teamName('B')}`;
     S.games.forEach((g, i) => {
       const a = atkTeam(g);
-      t += f > 1 ? `\n${N[i]} ${g.map}${g.dec ? ' (결정전)' : ` (${teamName(g.by)} 픽)`} — ⚔️ ${teamName(a)} / 🛡️ ${teamName(other(a))}`
+      t += f > 1 ? `\n${N[i]} ${g.map}${g.dec ? ' (결정전)' : ` (${teamName(g.by)} 선택)`} — ⚔️ ${teamName(a)} / 🛡️ ${teamName(other(a))}`
         : `\n🗺️ ${g.map}\n⚔️ 공격: ${teamName(a)}\n🛡️ 수비: ${teamName(other(a))}`;
     });
     const bans = S.veto.filter(v => v.a === 'ban');
-    if (bans.length) t += `\n🚫 밴: ${bans.map(b => `${b.m}(${teamName(b.s)})`).join(' → ')}`;
+    if (bans.length) t += `\n🚫 밴한 맵: ${bans.map(b => `${b.m} (${teamName(b.s)})`).join(' → ')}`;
     return t;
   }
   function renderHistory() {
@@ -1057,7 +1057,7 @@
       if (!meta) msg = '불러오는 중…';
       else if (!both) msg = '팀장 입장 대기 중';
       else if (me && !S.commit[me]) msg = '가위 · 바위 · 보 선택';
-      else if (me) msg = '준비 완료 · 상대 대기';
+      else if (me) msg = '준비 완료 · 상대 팀을 기다리는 중';
       else msg = `준비 ${SIDES.filter(s => S.commit[s]).length} / 2`;
       $('rpsMsg').textContent = msg;
     }
@@ -1079,7 +1079,7 @@
         renderBans();
         const cs = curStep(), g = cs && cs.a === 'side' ? S.games[cs.g] : null;
         $('postMsg').innerHTML = done ? `🗺️ ${S.games.map(x => `<b style="color:#ffd166">${esc(x.map)}</b>`).join(' → ')}`
-          : fmtEff() > 1 ? `Bo${fmtEff()} · 밴 2 → 픽 → 상대가 진영 → 마지막 남은 맵이 결정전` : '번갈아 밴 · 마지막 남은 맵으로 경기';
+          : fmtEff() > 1 ? `Bo${fmtEff()} · 맵 2개 밴 → 픽 → 상대 팀이 진영 선택 · 마지막에 남은 맵이 결정전 맵이에요` : '번갈아 맵 밴 · 마지막에 남은 맵으로 경기';
         $('rollBox').classList.add('hidden');
         const sideHow = cs && cs.a === 'side' ? actAs(cs.s) : null;
         $('sideBox').classList.toggle('hidden', !(sideHow && !S.sent[`v${S.veto.length}_${ep()}`]));
@@ -1140,7 +1140,7 @@
     if (myCap && myCap.bad) role = '⚠️ 팀장 코드 불일치 · 관전 모드';
     else if (me) role = `${me}팀장`;
     else if (myCap) role = '팀장 입장 중…';
-    else if (isAdmin()) role = '🛠️ 관리자 · 팀장이 없을 땐 대신 진행 가능';
+    else if (isAdmin()) role = '🛠️ 관리자 · 팀장이 없으면 대신 진행할 수 있어요';
     else if (adm && !adm.ok) role = '⚠️ 관리자 코드 불일치 · 관전 모드';
     else if (myTeam) role = `${myTeam.side}팀원 · 팀 채팅 가능`;
     else role = followGroup ? '📌 최신 방 자동 관전 중' : '👀 관전 중';
